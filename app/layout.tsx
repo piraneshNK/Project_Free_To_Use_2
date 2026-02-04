@@ -9,9 +9,49 @@ import { ThemeProvider } from '@/components/theme-provider'
 const inter = Inter({ subsets: ["latin"], variable: "--font-sans" });
 
 export const metadata: Metadata = {
-  title: 'Project Free to Use - Free Apps, APIs & Open Innovation Tools',
+  metadataBase: new URL('https://projectfreetouse.com'),
+  title: {
+    default: 'Project Free to Use - Free Apps, APIs & Open Innovation Tools',
+    template: '%s | Project Free to Use'
+  },
   description: 'Discover free resources to build faster, smarter, and cheaper. Find free apps, APIs, open source projects, and open patents.',
-  keywords: ['free apps', 'free APIs', 'open source', 'open patents', 'developer tools', 'AI tools'],
+  keywords: ['free apps', 'free APIs', 'open source', 'open patents', 'developer tools', 'AI tools', 'free tools', 'open innovation'],
+  authors: [{ name: 'Project Free to Use' }],
+  creator: 'Project Free to Use',
+  publisher: 'Project Free to Use',
+  openGraph: {
+    type: 'website',
+    locale: 'en_US',
+    url: 'https://projectfreetouse.com',
+    siteName: 'Project Free to Use',
+    title: 'Project Free to Use - Free Apps, APIs & Open Innovation Tools',
+    description: 'Discover free resources to build faster, smarter, and cheaper. Find free apps, APIs, open source projects, and open patents.',
+    images: [
+      {
+        url: '/og-image.png',
+        width: 1200,
+        height: 630,
+        alt: 'Project Free to Use',
+      },
+    ],
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'Project Free to Use - Free Apps, APIs & Open Innovation Tools',
+    description: 'Discover free resources to build faster, smarter, and cheaper.',
+    images: ['/og-image.png'],
+  },
+  robots: {
+    index: true,
+    follow: true,
+    googleBot: {
+      index: true,
+      follow: true,
+      'max-video-preview': -1,
+      'max-image-preview': 'large',
+      'max-snippet': -1,
+    },
+  },
   icons: {
     icon: [
       {
@@ -52,9 +92,7 @@ export default function RootLayout({
           disableTransitionOnChange
         >
           <Navbar />
-          <main className="min-h-screen">
-            {children}
-          </main>
+          <main>{children}</main>
           <Footer />
         </ThemeProvider>
       </body>

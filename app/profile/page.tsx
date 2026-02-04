@@ -1,25 +1,26 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import Link from "next/link"
+import { useRouter } from "next/navigation"
 import { motion } from "framer-motion"
-import { Fingerprint, Copy, User, Lock, Bookmark, Trash2, ExternalLink } from "lucide-react"
+import { Fingerprint, Copy, Bookmark, Trash2, ExternalLink } from "lucide-react"
+import Link from "next/link"
 import { Button } from "@/components/ui/button"
 import { Label } from "@/components/ui/label"
 import { Avatar, AvatarFallback } from "@/components/ui/avatar"
-import { getDeviceInfo } from "@/lib/device-auth"
+import { getDeviceId, getShortDeviceId } from "@/lib/device-auth"
 import { getSavedTools, unsaveTool, type SavedTool } from "@/lib/saved-tools"
 
 export default function ProfilePage() {
   const [deviceId, setDeviceId] = useState("")
-  const [displayName, setDisplayName] = useState("")
+  const [shortId, setShortId] = useState("")
   const [copied, setCopied] = useState(false)
   const [savedTools, setSavedTools] = useState<SavedTool[]>([])
 
   useEffect(() => {
-    const info = getDeviceInfo()
-    setDeviceId(info.deviceId)
-    setDisplayName(info.displayName)
+    const id = getDeviceId()
+    setDeviceId(id)
+    setShortId(getShortDeviceId())
 
     // Load saved tools
     setSavedTools(getSavedTools())
@@ -49,7 +50,7 @@ export default function ProfilePage() {
           <div className="mb-8">
             <h1 className="text-3xl font-bold text-foreground">Profile</h1>
             <p className="mt-2 text-muted-foreground">
-              View your device information
+              View your device information and saved tools
             </p>
           </div>
 
@@ -59,18 +60,18 @@ export default function ProfilePage() {
               {/* Avatar */}
               <Avatar className="h-20 w-20 border-2 border-primary">
                 <AvatarFallback className="bg-primary/10 text-2xl font-bold text-primary">
-                  {displayName.charAt(0).toUpperCase()}
+                  {shortId.substring(0, 2).toUpperCase()}
                 </AvatarFallback>
               </Avatar>
 
               {/* Info */}
               <div className="flex-1">
                 <div className="flex items-center gap-3">
-                  <h2 className="text-2xl font-bold text-foreground">{displayName}</h2>
-                  <Lock className="h-5 w-5 text-muted-foreground" title="Unchangeable" />
+                  <h2 className="text-2xl font-bold text-foreground font-mono">{shortId}</h2>
+                  <Fingerprint className="h-5 w-5 text-muted-foreground" />
                 </div>
                 <p className="mt-1 text-sm text-muted-foreground">
-                  Display name (permanent)
+                  Device ID (last 8 characters)
                 </p>
               </div>
             </div>
@@ -87,7 +88,7 @@ export default function ProfilePage() {
 
               <div className="rounded-lg bg-secondary/30 p-4 space-y-3">
                 <div>
-                  <Label className="text-xs text-muted-foreground">Device ID (Permanent)</Label>
+                  <Label className="text-xs text-muted-foreground">Full Device ID (Permanent)</Label>
                   <div className="mt-1 flex items-center gap-2">
                     <code className="flex-1 rounded bg-background px-3 py-2 text-xs font-mono text-foreground border border-border overflow-x-auto">
                       {deviceId}
@@ -104,18 +105,6 @@ export default function ProfilePage() {
                   </div>
                   <p className="mt-1 text-xs text-muted-foreground">
                     This ID is unique to this device and never changes
-                  </p>
-                </div>
-
-                <div>
-                  <Label className="text-xs text-muted-foreground">Display Name (Permanent)</Label>
-                  <div className="mt-1 rounded bg-background px-3 py-2 text-sm font-medium text-foreground border border-border flex items-center gap-2">
-                    <User className="h-4 w-4 text-muted-foreground" />
-                    {displayName}
-                    <Lock className="ml-auto h-4 w-4 text-muted-foreground" />
-                  </div>
-                  <p className="mt-1 text-xs text-muted-foreground">
-                    This name was set during registration and cannot be changed
                   </p>
                 </div>
               </div>
@@ -135,8 +124,8 @@ export default function ProfilePage() {
                     <span>Unique identifier for this device. Used to track your comments and submissions.</span>
                   </li>
                   <li className="flex gap-2">
-                    <span className="font-bold min-w-[80px]">Display Name:</span>
-                    <span>What others see on your comments. Set once during registration.</span>
+                    <span className="font-bold min-w-[80px]">Display:</span>
+                    <span>Last 8 characters shown for brevity. Full ID available above.</span>
                   </li>
                   <li className="flex gap-2">
                     <span className="font-bold min-w-[80px]">Storage:</span>
@@ -144,7 +133,7 @@ export default function ProfilePage() {
                   </li>
                   <li className="flex gap-2">
                     <span className="font-bold min-w-[80px]">Permanent:</span>
-                    <span>Both values cannot be changed after registration.</span>
+                    <span>Cannot be changed. Clearing browser data will generate a new ID.</span>
                   </li>
                 </ul>
               </div>
@@ -216,10 +205,10 @@ export default function ProfilePage() {
             <h4 className="mb-2 font-semibold text-sm text-foreground">Privacy & Data</h4>
             <ul className="space-y-1 text-xs text-muted-foreground">
               <li>• Your Device ID is used to track your contributions (submissions, comments)</li>
-              <li>• Your Display Name appears publicly on your posts</li>
-              <li>• Both are stored in your browser AND Firebase for persistence</li>
-              <li>• Neither can be changed after initial registration</li>
-              <li>• Clearing browser data will require re-registration with a new Device ID</li>
+              <li>• Device ID is shown as last 8 characters for privacy</li>
+              <li>• Stored in your browser AND Firebase for persistence</li>
+              <li>• Cannot be changed - permanent identifier for this device</li>
+              <li>• Clearing browser data will generate a new Device ID</li>
               <li>• Comments are moderated for profanity and inappropriate content</li>
             </ul>
           </div>

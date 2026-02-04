@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button"
 import { Textarea } from "@/components/ui/textarea"
 import { Avatar, AvatarFallback } from "@/components/ui/avatar"
 import { Alert, AlertDescription } from "@/components/ui/alert"
-import { getDeviceInfo } from "@/lib/device-auth"
+import { getDeviceId, getShortDeviceId } from "@/lib/device-auth"
 import { addComment, getComments, deleteComment, type Comment } from "@/lib/comments"
 
 interface CommentsProps {
@@ -20,14 +20,13 @@ export function Comments({ toolSlug }: CommentsProps) {
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [isLoading, setIsLoading] = useState(true)
   const [deviceId, setDeviceId] = useState("")
-  const [displayName, setDisplayName] = useState("")
+  const [shortId, setShortId] = useState("")
   const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
     // Get device info
-    const info = getDeviceInfo()
-    setDeviceId(info.deviceId)
-    setDisplayName(info.displayName)
+    setDeviceId(getDeviceId())
+    setShortId(getShortDeviceId())
 
     // Load comments
     loadComments()
@@ -53,7 +52,7 @@ export function Comments({ toolSlug }: CommentsProps) {
     setError(null)
 
     try {
-      const result = await addComment(toolSlug, deviceId, displayName, newComment)
+      const result = await addComment(toolSlug, deviceId, newComment)
 
       if (result.success) {
         setNewComment("")
@@ -99,6 +98,10 @@ export function Comments({ toolSlug }: CommentsProps) {
     return date.toLocaleDateString()
   }
 
+  const getShortId = (fullId: string) => {
+    return fullId.slice(-8)
+  }
+
   return (
     <div className="mt-12 border-t border-border pt-8">
       <div className="mb-6 flex items-center gap-2">
@@ -113,11 +116,11 @@ export function Comments({ toolSlug }: CommentsProps) {
         <div className="rounded-xl border border-border bg-card p-4">
           <div className="mb-3 flex items-center gap-2">
             <Avatar className="h-8 w-8">
-              <AvatarFallback className="bg-primary/10 text-sm font-bold text-primary">
-                {displayName.charAt(0).toUpperCase()}
+              <AvatarFallback className="bg-primary/10 text-sm font-bold text-primary font-mono">
+                {shortId.substring(0, 2).toUpperCase()}
               </AvatarFallback>
             </Avatar>
-            <span className="text-sm font-medium text-foreground">{displayName}</span>
+            <span className="text-sm font-medium text-foreground font-mono">{shortId}</span>
           </div>
 
           {/* Error Alert */}
@@ -180,13 +183,13 @@ export function Comments({ toolSlug }: CommentsProps) {
                 <div className="mb-3 flex items-start justify-between">
                   <div className="flex items-center gap-2">
                     <Avatar className="h-8 w-8">
-                      <AvatarFallback className="bg-primary/10 text-sm font-bold text-primary">
-                        {comment.displayName.charAt(0).toUpperCase()}
+                      <AvatarFallback className="bg-primary/10 text-sm font-bold text-primary font-mono">
+                        {getShortId(comment.deviceId).substring(0, 2).toUpperCase()}
                       </AvatarFallback>
                     </Avatar>
                     <div>
-                      <p className="text-sm font-medium text-foreground">
-                        {comment.displayName}
+                      <p className="text-sm font-medium text-foreground font-mono">
+                        {getShortId(comment.deviceId)}
                       </p>
                       <p className="text-xs text-muted-foreground">
                         {formatTimestamp(comment.timestamp)}

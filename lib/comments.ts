@@ -18,7 +18,6 @@ export interface Comment {
     id: string
     toolSlug: string
     deviceId: string
-    displayName: string
     content: string
     timestamp: Date
 }
@@ -29,7 +28,6 @@ export interface Comment {
 export async function addComment(
     toolSlug: string,
     deviceId: string,
-    displayName: string,
     content: string
 ): Promise<{ success: boolean; message?: string; id?: string }> {
     // Validate content (includes profanity check)
@@ -42,7 +40,6 @@ export async function addComment(
         const docRef = await addDoc(collection(db, 'comments'), {
             toolSlug,
             deviceId,
-            displayName,
             content: content.trim(),
             timestamp: serverTimestamp()
         })
@@ -74,7 +71,6 @@ export async function getComments(toolSlug: string): Promise<Comment[]> {
                 id: doc.id,
                 toolSlug: data.toolSlug,
                 deviceId: data.deviceId,
-                displayName: data.displayName,
                 content: data.content,
                 timestamp: data.timestamp?.toDate() || new Date()
             })
