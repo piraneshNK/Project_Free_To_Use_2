@@ -1,6 +1,6 @@
 "use client"
 
-import { use } from "react"
+import { use, useState, useEffect } from "react"
 import Link from "next/link"
 import { notFound } from "next/navigation"
 import { motion } from "framer-motion"
@@ -18,9 +18,7 @@ import {
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Comments } from "@/components/comments"
-import { ToolCard } from "@/components/tool-card"
-import { getToolBySlug, sampleTools } from "@/lib/data"
-import { useState } from "react"
+import { ToolCard, type Tool } from "@/components/tool-card"
 import { SoftwareApplicationSchema, BreadcrumbSchema } from "@/components/json-ld"
 
 interface ToolPageProps {
@@ -29,12 +27,31 @@ interface ToolPageProps {
 
 export default function ToolPage({ params }: ToolPageProps) {
   const { slug } = use(params)
-  const tool = getToolBySlug(slug)
+  const [tool, setTool] = useState<Tool | null>(null)
+  const [relatedTools, setRelatedTools] = useState<Tool[]>([])
   const [copied, setCopied] = useState(false)
   const [saved, setSaved] = useState(false)
 
+  useEffect(() => {
+    // Fetch all tools and find the current one
+    fetch('/api/tools')
+      .then(res => res.json())
+      .then((tools: Tool[]) => {
+        const currentTool = tools.find(t => t.slug === slug)
+        if (currentTool) {
+          setTool(currentTool)
+          // Get related tools
+          const related = tools
+            .filter((t) => t.id !== currentTool.id && t.type === currentTool.type)
+            .slice(0, 3)
+          setRelatedTools(related)
+        }
+      })
+      .catch(err => console.error('Error loading tool:', err))
+  }, [slug])
+
   if (!tool) {
-    notFound()
+    return null // Loading state
   }
 
   const handleCopyEndpoint = async () => {
@@ -57,20 +74,17 @@ export default function ToolPage({ params }: ToolPageProps) {
     }
   }
 
-  // Get related tools
-  const relatedTools = sampleTools
-    .filter((t) => t.id !== tool.id && t.type === tool.type)
-    .slice(0, 3)
+
 
   const typeLabels = {
-    app: "Free App",
-    api: "Free API",
+    app: "AI Tool",
+    api: "API",
     "open-source": "Open Source",
     patent: "Open Patent",
   }
 
   const backLinks = {
-    app: "/apps",
+    app: "/ai-tools",
     api: "/apis",
     "open-source": "/open-source",
     patent: "/open-patents",
@@ -93,7 +107,7 @@ export default function ToolPage({ params }: ToolPageProps) {
           { name: tool.name, url: `https://projectfreetouse.com/tool/${tool.slug}` }
         ]}
       />
-      
+
       <div className="mx-auto max-w-7xl px-4 py-12 lg:px-8 lg:py-16">
         {/* Back Button */}
         <Link

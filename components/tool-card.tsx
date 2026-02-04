@@ -21,7 +21,12 @@ export interface Tool {
   stars?: number
   license?: string
   endpoint?: string
+  github?: string
+  featured?: boolean
+  verified?: boolean
+  sponsored?: boolean
 }
+
 
 interface ToolCardProps {
   tool: Tool
@@ -125,13 +130,16 @@ export function ToolCard({ tool, index = 0 }: ToolCardProps) {
           </Link>
           <a href={tool.url} target="_blank" rel="noopener noreferrer">
             <Button size="sm" className="bg-primary text-primary-foreground hover:bg-primary/90">
-              {tool.type === "open-source" ? (
-                <Github className="h-4 w-4" />
-              ) : (
-                <ExternalLink className="h-4 w-4" />
-              )}
+              <ExternalLink className="h-4 w-4" />
             </Button>
           </a>
+          {tool.github && (
+            <a href={tool.github} target="_blank" rel="noopener noreferrer">
+              <Button size="sm" className="bg-primary text-primary-foreground hover:bg-primary/90">
+                <Github className="h-4 w-4" />
+              </Button>
+            </a>
+          )}
         </div>
       </div>
     </motion.div>

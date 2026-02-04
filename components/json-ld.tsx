@@ -51,10 +51,10 @@ export function OrganizationSchema() {
 }
 
 // SoftwareApplication Schema for Tools
-export function SoftwareApplicationSchema({ 
-  name, 
-  description, 
-  url, 
+export function SoftwareApplicationSchema({
+  name,
+  description,
+  url,
   category,
   applicationCategory,
   offers
@@ -101,10 +101,10 @@ export function FAQSchema({ faqs }: { faqs: { question: string; answer: string }
 }
 
 // Breadcrumb Schema
-export function BreadcrumbSchema({ 
-  items 
-}: { 
-  items: { name: string; url: string }[] 
+export function BreadcrumbSchema({
+  items
+}: {
+  items: { name: string; url: string }[]
 }) {
   const schema = {
     "@context": "https://schema.org",
@@ -120,14 +120,14 @@ export function BreadcrumbSchema({
 }
 
 // ItemList Schema for Directory Pages
-export function ItemListSchema({ 
+export function ItemListSchema({
   name,
   description,
-  items 
-}: { 
+  items
+}: {
   name: string
   description: string
-  items: { name: string; url: string; description: string }[] 
+  items: { name: string; url: string; description: string }[]
 }) {
   const schema = {
     "@context": "https://schema.org",
@@ -145,6 +145,43 @@ export function ItemListSchema({
         description: item.description
       }
     }))
+  }
+  return <JsonLd data={schema} />
+}
+
+// Article Schema for Blog Posts
+export function ArticleSchema({
+  title,
+  description,
+  datePublished,
+  authorName,
+  imageUrl
+}: {
+  title: string
+  description: string
+  datePublished: string
+  authorName: string
+  imageUrl?: string
+}) {
+  const schema = {
+    "@context": "https://schema.org",
+    "@type": "Article",
+    headline: title,
+    description: description,
+    datePublished: datePublished,
+    author: {
+      "@type": "Person",
+      name: authorName
+    },
+    image: imageUrl || "https://projectfreetouse.com/logo.png",
+    publisher: {
+      "@type": "Organization",
+      name: "ProjectFreeToUse",
+      logo: {
+        "@type": "ImageObject",
+        url: "https://projectfreetouse.com/logo.png"
+      }
+    }
   }
   return <JsonLd data={schema} />
 }

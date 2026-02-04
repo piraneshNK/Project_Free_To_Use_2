@@ -8,7 +8,6 @@ import { Button } from "@/components/ui/button"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Badge } from "@/components/ui/badge"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { sampleTools } from "@/lib/data"
 
 // Mock user data (would come from Firebase Auth in production)
 const mockUser = {
@@ -18,8 +17,8 @@ const mockUser = {
   joinedDate: "January 2024",
 }
 
-// Mock saved tools and comments
-const savedTools = sampleTools.slice(0, 3)
+// Mock saved tools and comments (would come from database in production)
+const savedTools: any[] = []
 const userComments = [
   {
     id: "1",

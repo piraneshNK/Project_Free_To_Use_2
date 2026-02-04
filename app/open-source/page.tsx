@@ -1,11 +1,10 @@
 "use client"
 
-import { useState, useMemo } from "react"
+import { useState, useMemo, useEffect } from "react"
 import { motion } from "framer-motion"
 import { GitBranch } from "lucide-react"
-import { ToolCard } from "@/components/tool-card"
+import { ToolCard, type Tool } from "@/components/tool-card"
 import { SearchFilter } from "@/components/search-filter"
-import { getToolsByType } from "@/lib/data"
 import { BreadcrumbSchema, ItemListSchema } from "@/components/json-ld"
 import { FAQSection } from "@/components/faq-section"
 
@@ -49,8 +48,22 @@ const openSourceFaqs = [
 export default function OpenSourcePage() {
   const [searchQuery, setSearchQuery] = useState("")
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null)
+  const [openSourceTools, setOpenSourceTools] = useState<Tool[]>([])
+  const [loading, setLoading] = useState(true)
 
-  const openSourceTools = getToolsByType("open-source")
+  useEffect(() => {
+    fetch('/api/tools')
+      .then(res => res.json())
+      .then((tools: Tool[]) => {
+        const osTools = tools.filter(t => t.type === 'open-source')
+        setOpenSourceTools(osTools)
+        setLoading(false)
+      })
+      .catch(err => {
+        console.error('Error loading open source tools:', err)
+        setLoading(false)
+      })
+  }, [])
 
   const filteredTools = useMemo(() => {
     return openSourceTools.filter((tool) => {
@@ -72,11 +85,11 @@ export default function OpenSourcePage() {
 
   return (
     <div className="pt-16">
-      <BreadcrumbSchema 
+      <BreadcrumbSchema
         items={[
           { name: "Home", url: "https://projectfreetouse.com" },
           { name: "Open Source", url: "https://projectfreetouse.com/open-source" }
-        ]} 
+        ]}
       />
       <ItemListSchema
         name="Best Free Open Source Software Directory"
@@ -87,7 +100,7 @@ export default function OpenSourcePage() {
           description: tool.description
         }))}
       />
-      
+
       <div className="mx-auto max-w-7xl px-4 py-12 lg:px-8 lg:py-16">
         {/* Header */}
         <motion.div
@@ -120,15 +133,15 @@ export default function OpenSourcePage() {
           </h2>
           <div className="space-y-4 text-muted-foreground leading-relaxed">
             <p>
-              Discover the best <strong className="text-foreground">free open source software</strong> projects on the internet. 
-              Our curated directory features hundreds of high-quality GitHub projects with permissive licenses like 
+              Discover the best <strong className="text-foreground">free open source software</strong> projects on the internet.
+              Our curated directory features hundreds of high-quality GitHub projects with permissive licenses like
               MIT, Apache 2.0, and GPL - all free to use for personal and commercial projects.
             </p>
             <p>
-              Whether you need <strong className="text-foreground">web frameworks</strong> like Next.js and React, 
-              <strong className="text-foreground"> databases</strong> like Supabase and PostgreSQL, 
-              <strong className="text-foreground"> CSS frameworks</strong> like Tailwind CSS, or 
-              <strong className="text-foreground"> developer tools</strong> for building modern applications - 
+              Whether you need <strong className="text-foreground">web frameworks</strong> like Next.js and React,
+              <strong className="text-foreground"> databases</strong> like Supabase and PostgreSQL,
+              <strong className="text-foreground"> CSS frameworks</strong> like Tailwind CSS, or
+              <strong className="text-foreground"> developer tools</strong> for building modern applications -
               find everything you need to build faster and smarter.
             </p>
           </div>
@@ -191,9 +204,9 @@ export default function OpenSourcePage() {
         )}
 
         {/* FAQ Section */}
-        <FAQSection 
-          title="Frequently Asked Questions About Open Source Software" 
-          faqs={openSourceFaqs} 
+        <FAQSection
+          title="Frequently Asked Questions About Open Source Software"
+          faqs={openSourceFaqs}
         />
       </div>
     </div>

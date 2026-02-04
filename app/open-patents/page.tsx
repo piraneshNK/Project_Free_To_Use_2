@@ -1,65 +1,76 @@
 "use client"
 
-import { useState, useMemo } from "react"
+import { useState, useMemo, useEffect } from "react"
 import { motion } from "framer-motion"
-import { Lightbulb, ExternalLink } from "lucide-react"
+import { Lightbulb } from "lucide-react"
+import { ToolCard, type Tool } from "@/components/tool-card"
 import { SearchFilter } from "@/components/search-filter"
-import { getToolsByType } from "@/lib/data"
-import { Badge } from "@/components/ui/badge"
-import { Button } from "@/components/ui/button"
-import Link from "next/link"
-import { BreadcrumbSchema } from "@/components/json-ld"
+import { BreadcrumbSchema, ItemListSchema } from "@/components/json-ld"
 import { FAQSection } from "@/components/faq-section"
 
 const patentCategories = [
-  { id: "technology", label: "Technology" },
-  { id: "electric-vehicles", label: "Electric Vehicles" },
-  { id: "research", label: "Research" },
-  { id: "linux", label: "Linux" },
-  { id: "ai", label: "AI & Machine Learning" },
+  { id: "ai", label: "AI & ML" },
+  { id: "blockchain", label: "Blockchain" },
+  { id: "iot", label: "IoT" },
+  { id: "biotech", label: "Biotech" },
+  { id: "software", label: "Software" },
 ]
 
 const patentFaqs = [
   {
-    question: "What are open patents and why do they matter?",
-    answer: "Open patents are intellectual property that companies have made freely available for public use. They enable startups, researchers, and developers to build on existing innovations without licensing fees, accelerating technological progress and reducing barriers to entry."
+    question: "What are open patents?",
+    answer: "Open patents are publicly available patent documents and innovation resources that can be freely accessed, studied, and sometimes used. Our directory features patent databases, prior art search tools, and innovation resources."
   },
   {
-    question: "Can I use Tesla's open patents for my startup?",
-    answer: "Yes! Tesla has pledged not to initiate patent lawsuits against anyone using their technology in good faith. This includes electric vehicle technology, battery systems, and charging infrastructure patents."
+    question: "Can I use patented technology for free?",
+    answer: "It depends. Some patents are in the public domain after expiration, while others may have open licensing terms. Always check the specific patent status and licensing before commercial use."
   },
   {
-    question: "How do I search for specific patents?",
-    answer: "Use Google Patents (patents.google.com) for comprehensive patent searches. Our directory curates the best open patent resources and pledges from major companies to help you find innovation resources quickly."
+    question: "What is prior art and why does it matter?",
+    answer: "Prior art refers to existing knowledge or inventions that predate a patent application. It's crucial for determining patent validity and can help you avoid infringing on existing patents."
   },
   {
-    question: "What's the difference between open patents and open source?",
-    answer: "Open source refers to software code that's publicly available. Open patents refer to patented inventions that companies have pledged not to enforce, allowing others to use the technology freely."
+    question: "How do I search for patents?",
+    answer: "Use patent databases like Google Patents, USPTO, or EPO. Search by keywords, patent numbers, or inventors. Our directory lists the best free patent search tools and resources."
   },
   {
-    question: "Are there open patents for AI and machine learning?",
-    answer: "Yes! Companies like IBM and Google have made various AI-related patents available through open pledges. Our directory helps you discover AI patents and innovation resources for your research or startup."
+    question: "What's the difference between a patent and a trademark?",
+    answer: "Patents protect inventions and processes, while trademarks protect brand names and logos. Patents expire after 20 years, while trademarks can be renewed indefinitely."
   }
 ]
 
 export default function OpenPatentsPage() {
   const [searchQuery, setSearchQuery] = useState("")
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null)
+  const [patents, setPatents] = useState<Tool[]>([])
+  const [loading, setLoading] = useState(true)
 
-  const patents = getToolsByType("patent")
+  useEffect(() => {
+    fetch('/api/tools')
+      .then(res => res.json())
+      .then((tools: Tool[]) => {
+        const patentTools = tools.filter(t => t.type === 'patent')
+        setPatents(patentTools)
+        setLoading(false)
+      })
+      .catch(err => {
+        console.error('Error loading patents:', err)
+        setLoading(false)
+      })
+  }, [])
 
-  const filteredPatents = useMemo(() => {
-    return patents.filter((patent) => {
+  const filteredTools = useMemo(() => {
+    return patents.filter((tool) => {
       const matchesSearch =
         searchQuery === "" ||
-        patent.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        patent.description.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        patent.tags.some((tag) => tag.toLowerCase().includes(searchQuery.toLowerCase()))
+        tool.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        tool.description.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        tool.tags.some((tag) => tag.toLowerCase().includes(searchQuery.toLowerCase()))
 
       const matchesCategory =
         selectedCategory === null ||
-        patent.category.toLowerCase().replace(/\s+/g, "-") === selectedCategory ||
-        patent.tags.some((tag) => tag.toLowerCase().replace(/\s+/g, "-") === selectedCategory)
+        tool.category.toLowerCase().includes(selectedCategory) ||
+        tool.tags.some((tag) => tag.toLowerCase().includes(selectedCategory))
 
       return matchesSearch && matchesCategory
     })
@@ -67,13 +78,22 @@ export default function OpenPatentsPage() {
 
   return (
     <div className="pt-16">
-      <BreadcrumbSchema 
+      <BreadcrumbSchema
         items={[
           { name: "Home", url: "https://projectfreetouse.com" },
           { name: "Open Patents", url: "https://projectfreetouse.com/open-patents" }
-        ]} 
+        ]}
       />
-      
+      <ItemListSchema
+        name="Best Free Open Patents & Innovation Resources"
+        description="Curated collection of patent databases, prior art search tools, and innovation resources."
+        items={filteredTools.slice(0, 10).map(tool => ({
+          name: tool.name,
+          url: `https://projectfreetouse.com/tool/${tool.slug}`,
+          description: tool.description
+        }))}
+      />
+
       <div className="mx-auto max-w-7xl px-4 py-12 lg:px-8 lg:py-16">
         {/* Header */}
         <motion.div
@@ -86,9 +106,9 @@ export default function OpenPatentsPage() {
               <Lightbulb className="h-6 w-6" />
             </div>
             <div>
-              <h1 className="text-3xl font-bold text-foreground">Open Patents & Innovation Resources</h1>
+              <h1 className="text-3xl font-bold text-foreground">Best Free Open Patents & Innovation Resources</h1>
               <p className="text-muted-foreground">
-                Free patents, open inventions, and research-ready innovation resources
+                Discover patent databases, prior art search tools, and innovation resources
               </p>
             </div>
           </div>
@@ -102,41 +122,44 @@ export default function OpenPatentsPage() {
           className="mb-8 rounded-2xl border border-border bg-card/50 p-6 lg:p-8"
         >
           <h2 className="mb-4 text-xl font-semibold text-foreground">
-            The Open Patents Directory: Innovation Without Barriers
+            The Ultimate Open Patents & Innovation Directory
           </h2>
           <div className="space-y-4 text-muted-foreground leading-relaxed">
             <p>
-              Welcome to the most comprehensive directory of <strong className="text-foreground">open patents</strong> and 
-              freely available innovation resources. Our curated collection helps startups, researchers, and developers 
-              discover patented technologies that companies have pledged to share freely with the world.
+              Discover the best <strong className="text-foreground">free patent databases</strong> and innovation resources.
+              Our curated directory features patent search tools, prior art databases, and innovation resources -
+              all free to access for research and commercial use.
             </p>
             <p>
-              From <strong className="text-foreground">Tesla's electric vehicle patents</strong> to 
-              <strong className="text-foreground"> IBM's technology pledges</strong> and 
-              <strong className="text-foreground"> Open Invention Network's Linux protection</strong> - 
-              find the intellectual property resources you need to build groundbreaking products without licensing barriers.
-            </p>
-            <p>
-              Open patents represent a revolutionary shift in how companies approach innovation. By sharing their patented 
-              technologies, industry leaders enable faster progress, reduce development costs, and create opportunities 
-              for entrepreneurs worldwide to build on proven innovations.
+              Whether you need <strong className="text-foreground">patent search tools</strong> like Google Patents,
+              <strong className="text-foreground"> prior art databases</strong> for research,
+              <strong className="text-foreground"> innovation resources</strong> for startups, or
+              <strong className="text-foreground"> patent analytics</strong> for competitive intelligence -
+              find everything you need to innovate smarter.
             </p>
           </div>
         </motion.div>
 
-        {/* Info Banner */}
-        <div className="mb-8 rounded-xl border border-primary/20 bg-primary/5 p-6">
-          <h3 className="mb-2 font-semibold text-foreground">What are Open Patents?</h3>
-          <p className="text-sm text-muted-foreground">
-            Open patents are intellectual property that companies and organizations have made freely 
-            available for use. This enables startups, researchers, and developers to build upon 
-            existing innovations without licensing fees or legal barriers.
-          </p>
+        {/* Stats */}
+        <div className="mb-8 grid grid-cols-3 gap-4">
+          {[
+            { label: "Patent DBs", count: "50+" },
+            { label: "Search Tools", count: "30+" },
+            { label: "Resources", count: "20+" },
+          ].map((stat) => (
+            <div
+              key={stat.label}
+              className="rounded-xl border border-border bg-card p-4 text-center"
+            >
+              <p className="text-2xl font-bold text-primary">{stat.count}</p>
+              <p className="text-sm text-muted-foreground">{stat.label}</p>
+            </div>
+          ))}
         </div>
 
         {/* Search and Filters */}
         <SearchFilter
-          placeholder="Search open patents and innovations..."
+          placeholder="Search patents and innovation resources..."
           categories={patentCategories}
           onSearch={setSearchQuery}
           onFilterChange={setSelectedCategory}
@@ -145,70 +168,21 @@ export default function OpenPatentsPage() {
 
         {/* Results Count */}
         <p className="mb-6 text-sm text-muted-foreground">
-          Showing {filteredPatents.length} {filteredPatents.length === 1 ? "patent" : "patents"}
+          Showing {filteredTools.length} {filteredTools.length === 1 ? "resource" : "resources"}
           {searchQuery && ` for "${searchQuery}"`}
         </p>
 
-        {/* Patents Grid */}
-        <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-          {filteredPatents.map((patent, index) => (
-            <motion.div
-              key={patent.id}
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: index * 0.05 }}
-              className="group relative"
-            >
-              <div className="absolute -inset-0.5 rounded-2xl bg-primary/20 opacity-0 blur transition-opacity group-hover:opacity-100" />
-              <div className="relative flex h-full flex-col rounded-2xl border border-border bg-card p-6 transition-all hover:border-primary/50">
-                {/* Category Tag */}
-                <Badge className="mb-4 w-fit bg-primary/10 text-primary hover:bg-primary/20">
-                  {patent.category}
-                </Badge>
-
-                {/* Title */}
-                <Link href={`/tool/${patent.slug}`}>
-                  <h3 className="mb-3 text-xl font-semibold text-foreground transition-colors hover:text-primary">
-                    {patent.name}
-                  </h3>
-                </Link>
-
-                {/* Description */}
-                <p className="mb-4 flex-1 text-sm leading-relaxed text-muted-foreground">
-                  {patent.description}
-                </p>
-
-                {/* Tags */}
-                <div className="mb-4 flex flex-wrap gap-2">
-                  {patent.tags.map((tag) => (
-                    <Badge key={tag} variant="secondary" className="text-xs">
-                      {tag}
-                    </Badge>
-                  ))}
-                </div>
-
-                {/* Actions */}
-                <div className="flex items-center gap-2">
-                  <Link href={`/tool/${patent.slug}`} className="flex-1">
-                    <Button variant="outline" size="sm" className="w-full bg-transparent">
-                      View Details
-                    </Button>
-                  </Link>
-                  <a href={patent.url} target="_blank" rel="noopener noreferrer">
-                    <Button size="sm" className="bg-primary text-primary-foreground hover:bg-primary/90">
-                      <ExternalLink className="h-4 w-4" />
-                    </Button>
-                  </a>
-                </div>
-              </div>
-            </motion.div>
+        {/* Projects Grid */}
+        <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+          {filteredTools.map((tool, index) => (
+            <ToolCard key={tool.id} tool={tool} index={index} />
           ))}
         </div>
 
-        {filteredPatents.length === 0 && (
+        {filteredTools.length === 0 && (
           <div className="py-16 text-center">
             <p className="text-lg text-muted-foreground">
-              No patents found matching your criteria.
+              No patent resources found matching your criteria.
             </p>
             <button
               className="mt-4 text-primary hover:underline"
@@ -223,9 +197,9 @@ export default function OpenPatentsPage() {
         )}
 
         {/* FAQ Section */}
-        <FAQSection 
-          title="Frequently Asked Questions About Open Patents" 
-          faqs={patentFaqs} 
+        <FAQSection
+          title="Frequently Asked Questions About Open Patents"
+          faqs={patentFaqs}
         />
       </div>
     </div>

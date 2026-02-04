@@ -1,14 +1,13 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import Link from "next/link"
 import { motion } from "framer-motion"
 import { Search, Sparkles, Code, GitBranch, Lightbulb, ArrowRight, Zap, Brain } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Badge } from "@/components/ui/badge"
-import { ToolCard } from "@/components/tool-card"
-import { sampleTools } from "@/lib/data"
+import { ToolCard, type Tool } from "@/components/tool-card"
 import { WebsiteSchema, OrganizationSchema } from "@/components/json-ld"
 import { FAQSection } from "@/components/faq-section"
 
@@ -45,21 +44,37 @@ const homeFaqs = [
 
 export default function HomePage() {
   const [searchQuery, setSearchQuery] = useState("")
-  const trendingTools = sampleTools.slice(0, 8)
+  const [tools, setTools] = useState<Tool[]>([])
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    fetch('/api/tools')
+      .then(res => res.json())
+      .then(data => {
+        setTools(data)
+        setLoading(false)
+      })
+      .catch(err => {
+        console.error('Error loading tools:', err)
+        setLoading(false)
+      })
+  }, [])
+
+  const trendingTools = tools.slice(0, 8)
 
   const filteredTools = searchQuery
-    ? sampleTools.filter(
-        (tool) =>
-          tool.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-          tool.description.toLowerCase().includes(searchQuery.toLowerCase())
-      )
+    ? tools.filter(
+      (tool: Tool) =>
+        tool.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        tool.description.toLowerCase().includes(searchQuery.toLowerCase())
+    )
     : trendingTools
 
   return (
     <div className="pt-16">
       <WebsiteSchema />
       <OrganizationSchema />
-      
+
       {/* Hero Section */}
       <section className="relative overflow-hidden">
         {/* Background Effects */}
@@ -232,28 +247,28 @@ export default function HomePage() {
                 description: "Writing, image, video, productivity AI tools",
                 href: "/ai-tools",
                 icon: Brain,
-                count: "500+",
+                count: tools.filter(t => t.type === 'app').length,
               },
               {
                 title: "Free APIs",
                 description: "AI, weather, finance, developer APIs",
                 href: "/apis",
                 icon: Code,
-                count: "200+",
+                count: tools.filter(t => t.type === 'api').length,
               },
               {
                 title: "Open Source",
                 description: "GitHub projects with MIT, Apache licenses",
                 href: "/open-source",
                 icon: GitBranch,
-                count: "1K+",
+                count: tools.filter(t => t.type === 'open-source').length,
               },
               {
                 title: "Open Patents",
                 description: "Free patents and innovation resources",
                 href: "/open-patents",
                 icon: Lightbulb,
-                count: "100+",
+                count: tools.filter(t => t.type === 'patent').length,
               },
             ].map((category, index) => (
               <motion.div
@@ -274,7 +289,9 @@ export default function HomePage() {
                         {category.description}
                       </p>
                       <div className="flex items-center justify-between">
-                        <span className="text-sm font-medium text-primary">{category.count} tools</span>
+                        <span className="text-sm font-medium text-primary">
+                          {category.count > 0 ? `${category.count} tools` : 'Loading...'}
+                        </span>
                         <ArrowRight className="h-4 w-4 text-muted-foreground transition-transform group-hover:translate-x-1 group-hover:text-primary" />
                       </div>
                     </div>

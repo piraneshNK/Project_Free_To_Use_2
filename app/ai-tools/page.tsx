@@ -1,11 +1,10 @@
 "use client"
 
-import { useState, useMemo } from "react"
+import { useState, useMemo, useEffect } from "react"
 import { motion } from "framer-motion"
 import { Brain, Sparkles, ImageIcon, Video, Code, BookOpen, Briefcase } from "lucide-react"
-import { ToolCard } from "@/components/tool-card"
+import { ToolCard, type Tool } from "@/components/tool-card"
 import { SearchFilter } from "@/components/search-filter"
-import { getToolsByType } from "@/lib/data"
 import { BreadcrumbSchema, ItemListSchema } from "@/components/json-ld"
 import { FAQSection } from "@/components/faq-section"
 
@@ -44,8 +43,30 @@ const aiToolsFaqs = [
 export default function AIToolsPage() {
   const [searchQuery, setSearchQuery] = useState("")
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null)
+  const [apps, setApps] = useState<Tool[]>([])
+  const [loading, setLoading] = useState(true)
 
-  const apps = getToolsByType("app")
+  useEffect(() => {
+    fetch('/api/tools')
+      .then(res => res.json())
+      .then((tools: Tool[]) => {
+        // Filter AI tools but exclude LLM models
+        const aiTools = tools.filter(t =>
+          t.type === 'app' &&
+          !t.tags.some(tag =>
+            tag.toLowerCase().includes('llm') ||
+            tag.toLowerCase().includes('language model') ||
+            tag.toLowerCase().includes('embedding')
+          )
+        )
+        setApps(aiTools)
+        setLoading(false)
+      })
+      .catch(err => {
+        console.error('Error loading AI tools:', err)
+        setLoading(false)
+      })
+  }, [])
 
   const filteredApps = useMemo(() => {
     return apps.filter((app) => {
@@ -66,11 +87,11 @@ export default function AIToolsPage() {
 
   return (
     <div className="pt-16">
-      <BreadcrumbSchema 
+      <BreadcrumbSchema
         items={[
           { name: "Home", url: "https://projectfreetouse.com" },
           { name: "AI Tools", url: "https://projectfreetouse.com/ai-tools" }
-        ]} 
+        ]}
       />
       <ItemListSchema
         name="Best Free AI Tools Directory"
@@ -81,7 +102,7 @@ export default function AIToolsPage() {
           description: app.description
         }))}
       />
-      
+
       <div className="mx-auto max-w-7xl px-4 py-12 lg:px-8 lg:py-16">
         {/* Header */}
         <motion.div
@@ -114,21 +135,21 @@ export default function AIToolsPage() {
           </h2>
           <div className="space-y-4 text-muted-foreground leading-relaxed">
             <p>
-              Welcome to ProjectFreeToUse, the most comprehensive directory of <strong className="text-foreground">free AI tools</strong> on the internet. 
-              Whether you're a developer, content creator, student, or entrepreneur, our curated collection helps you discover 
+              Welcome to ProjectFreeToUse, the most comprehensive directory of <strong className="text-foreground">free AI tools</strong> on the internet.
+              Whether you're a developer, content creator, student, or entrepreneur, our curated collection helps you discover
               powerful AI-powered applications without spending a dime.
             </p>
             <p>
-              Our directory features hundreds of verified free AI tools across multiple categories including 
-              <strong className="text-foreground"> Writing AI</strong> for content generation and grammar checking, 
-              <strong className="text-foreground"> Image AI</strong> for art generation and photo editing, 
-              <strong className="text-foreground"> Video AI</strong> for video creation and editing, 
-              <strong className="text-foreground"> Coding AI</strong> for code completion and debugging, and 
+              Our directory features hundreds of verified free AI tools across multiple categories including
+              <strong className="text-foreground"> Writing AI</strong> for content generation and grammar checking,
+              <strong className="text-foreground"> Image AI</strong> for art generation and photo editing,
+              <strong className="text-foreground"> Video AI</strong> for video creation and editing,
+              <strong className="text-foreground"> Coding AI</strong> for code completion and debugging, and
               <strong className="text-foreground"> Productivity AI</strong> for workflow automation.
             </p>
             <p>
-              Every tool in our directory is verified to offer a genuine free tier - no credit card required. 
-              We help millions of users discover the best free artificial intelligence tools to boost productivity, 
+              Every tool in our directory is verified to offer a genuine free tier - no credit card required.
+              We help millions of users discover the best free artificial intelligence tools to boost productivity,
               enhance creativity, and build amazing projects. Start exploring our AI tools directory today!
             </p>
           </div>
@@ -173,9 +194,9 @@ export default function AIToolsPage() {
         )}
 
         {/* FAQ Section */}
-        <FAQSection 
-          title="Frequently Asked Questions About Free AI Tools" 
-          faqs={aiToolsFaqs} 
+        <FAQSection
+          title="Frequently Asked Questions About Free AI Tools"
+          faqs={aiToolsFaqs}
         />
       </div>
     </div>

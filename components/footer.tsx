@@ -111,7 +111,7 @@ export function Footer() {
             <span className="font-semibold text-foreground">ProjectFreeToUse</span>
           </div>
           <p className="text-sm text-muted-foreground">
-            2024 ProjectFreeToUse. All rights reserved.
+            © 2026 ProjectFreeToUse. All rights reserved.
           </p>
           <div className="flex items-center gap-4">
             <a

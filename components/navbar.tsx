@@ -1,16 +1,11 @@
 "use client"
 
 import Link from "next/link"
+import Image from "next/image"
 import { useState } from "react"
 import { motion, AnimatePresence } from "framer-motion"
-import { Menu, X, User, ChevronDown } from "lucide-react"
+import { Menu, X, User } from "lucide-react"
 import { Button } from "@/components/ui/button"
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu"
 import { ThemeToggle } from "@/components/theme-toggle"
 
 const navLinks = [
@@ -19,15 +14,8 @@ const navLinks = [
   { href: "/apis", label: "APIs" },
   { href: "/open-source", label: "Open Source" },
   { href: "/open-patents", label: "Open Patents" },
-]
-
-const categories = [
-  { href: "/ai-tools?category=writing", label: "Writing AI" },
-  { href: "/ai-tools?category=image", label: "Image AI" },
-  { href: "/ai-tools?category=video", label: "Video AI" },
-  { href: "/ai-tools?category=productivity", label: "Productivity AI" },
-  { href: "/ai-tools?category=coding", label: "Coding AI" },
-  { href: "/ai-tools?category=student", label: "Student AI" },
+  { href: "/llm-models", label: "LLM Models" },
+  { href: "/about", label: "About" },
 ]
 
 export function Navbar() {
@@ -38,12 +26,14 @@ export function Navbar() {
       <nav className="mx-auto flex h-16 max-w-7xl items-center justify-between px-4 lg:px-8">
         {/* Logo */}
         <Link href="/" className="flex items-center gap-2">
-          <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary">
-            <span className="text-sm font-bold text-primary-foreground">PF</span>
-          </div>
-          <span className="hidden font-semibold text-foreground sm:block">
-            ProjectFreeToUse
-          </span>
+          <Image
+            src="/logo.png"
+            alt="Project Free To Use Logo"
+            width={180}
+            height={60}
+            className="h-8 w-auto"
+            priority
+          />
         </Link>
 
         {/* Desktop Navigation */}
@@ -57,21 +47,6 @@ export function Navbar() {
               {link.label}
             </Link>
           ))}
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <button className="flex items-center gap-1 rounded-lg px-3 py-2 text-sm text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground">
-                Categories
-                <ChevronDown className="h-4 w-4" />
-              </button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="w-48">
-              {categories.map((cat) => (
-                <DropdownMenuItem key={cat.href} asChild>
-                  <Link href={cat.href}>{cat.label}</Link>
-                </DropdownMenuItem>
-              ))}
-            </DropdownMenuContent>
-          </DropdownMenu>
           <Link
             href="/blog"
             className="rounded-lg px-3 py-2 text-sm text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground"
@@ -129,19 +104,13 @@ export function Navbar() {
                   {link.label}
                 </Link>
               ))}
-              <div className="border-t border-border pt-2">
-                <p className="px-3 py-2 text-xs font-medium text-muted-foreground">Categories</p>
-                {categories.map((cat) => (
-                  <Link
-                    key={cat.href}
-                    href={cat.href}
-                    onClick={() => setMobileMenuOpen(false)}
-                    className="block rounded-lg px-3 py-2 text-sm text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground"
-                  >
-                    {cat.label}
-                  </Link>
-                ))}
-              </div>
+              <Link
+                href="/blog"
+                onClick={() => setMobileMenuOpen(false)}
+                className="block rounded-lg px-3 py-2 text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground"
+              >
+                Blog
+              </Link>
               <div className="flex flex-col gap-2 border-t border-border pt-4">
                 <Link href="/submit" onClick={() => setMobileMenuOpen(false)}>
                   <Button variant="outline" className="w-full border-primary/50 text-primary bg-transparent">

@@ -1,9 +1,9 @@
 import { MetadataRoute } from 'next'
-import { sampleTools } from '@/lib/data'
+import { getAllTools } from '@/lib/data'
 
-export default function sitemap(): MetadataRoute.Sitemap {
+export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const baseUrl = 'https://projectfreetouse.com'
-  
+
   // Static pages
   const staticPages = [
     {
@@ -51,7 +51,8 @@ export default function sitemap(): MetadataRoute.Sitemap {
   ]
 
   // Dynamic tool pages
-  const toolPages = sampleTools.map((tool) => ({
+  const tools = await getAllTools()
+  const toolPages = tools.map((tool) => ({
     url: `${baseUrl}/tool/${tool.slug}`,
     lastModified: new Date(),
     changeFrequency: 'weekly' as const,
