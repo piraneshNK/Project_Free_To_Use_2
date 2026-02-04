@@ -2,12 +2,11 @@
 
 import Link from "next/link"
 import Image from "next/image"
-import { useState, useEffect } from "react"
+import { useState } from "react"
 import { motion, AnimatePresence } from "framer-motion"
-import { Menu, X, User } from "lucide-react"
+import { Menu, X } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { ThemeToggle } from "@/components/theme-toggle"
-import { isRegistered } from "@/lib/device-auth"
 
 const navLinks = [
   { href: "/", label: "Home" },
@@ -21,12 +20,6 @@ const navLinks = [
 
 export function Navbar() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
-  const [isLoggedIn, setIsLoggedIn] = useState(false)
-
-  useEffect(() => {
-    // Check if user is registered
-    setIsLoggedIn(isRegistered())
-  }, [])
 
   return (
     <header className="fixed top-0 left-0 right-0 z-50 border-b border-border/50 bg-background/80 backdrop-blur-xl">
@@ -74,21 +67,6 @@ export function Navbar() {
               Submit Tool
             </Button>
           </Link>
-          {isLoggedIn ? (
-            <Link href="/profile">
-              <Button size="sm" className="hidden bg-primary text-primary-foreground hover:bg-primary/90 sm:flex">
-                <User className="mr-2 h-4 w-4" />
-                Profile
-              </Button>
-            </Link>
-          ) : (
-            <Link href="/login">
-              <Button size="sm" className="hidden bg-primary text-primary-foreground hover:bg-primary/90 sm:flex">
-                <User className="mr-2 h-4 w-4" />
-                Login
-              </Button>
-            </Link>
-          )}
 
           {/* Mobile Menu Button */}
           <button
@@ -115,7 +93,7 @@ export function Navbar() {
                   key={link.href}
                   href={link.href}
                   onClick={() => setMobileMenuOpen(false)}
-                  className="block rounded-lg px-3 py-2 text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground"
+                  className="block rounded-lg px-3 py-2 text-sm text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground"
                 >
                   {link.label}
                 </Link>
@@ -123,22 +101,17 @@ export function Navbar() {
               <Link
                 href="/blog"
                 onClick={() => setMobileMenuOpen(false)}
-                className="block rounded-lg px-3 py-2 text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground"
+                className="block rounded-lg px-3 py-2 text-sm text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground"
               >
                 Blog
               </Link>
-              <div className="flex flex-col gap-2 border-t border-border pt-4">
-                <Link href="/submit" onClick={() => setMobileMenuOpen(false)}>
-                  <Button variant="outline" className="w-full border-primary/50 text-primary bg-transparent">
-                    Submit Tool
-                  </Button>
-                </Link>
-                <Link href="/login" onClick={() => setMobileMenuOpen(false)}>
-                  <Button className="w-full bg-primary text-primary-foreground">
-                    Login
-                  </Button>
-                </Link>
-              </div>
+              <Link
+                href="/submit"
+                onClick={() => setMobileMenuOpen(false)}
+                className="block rounded-lg px-3 py-2 text-sm text-primary transition-colors hover:bg-secondary"
+              >
+                Submit Tool
+              </Link>
             </div>
           </motion.div>
         )}
