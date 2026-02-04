@@ -124,7 +124,7 @@ export function ToolCard({ tool, index = 0 }: ToolCardProps) {
         {/* Actions */}
         <div className="flex items-center gap-2">
           <Link href={`/tool/${tool.slug}`} className="flex-1">
-            <Button variant="outline" size="sm" className="w-full bg-transparent">
+            <Button variant="outline" size="sm" className="w-full bg-transparent hover:bg-primary/10 hover:text-primary hover:border-primary transition-colors">
               View Details
             </Button>
           </Link>

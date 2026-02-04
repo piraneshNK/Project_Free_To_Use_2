@@ -1,33 +1,77 @@
 "use client"
 
-import React from "react"
-
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import Link from "next/link"
+import { useRouter } from "next/navigation"
 import { motion } from "framer-motion"
-import { Mail, Lock, Eye, EyeOff, ArrowRight } from "lucide-react"
+import { User, RefreshCw, ArrowRight, Sparkles, CheckCircle } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
+import { Alert, AlertDescription } from "@/components/ui/alert"
+import { getDeviceId, setDisplayName, generateRandomName, isRegistered } from "@/lib/device-auth"
+import { registerUser } from "@/lib/firebase-users"
 
 export default function LoginPage() {
-  const [isLogin, setIsLogin] = useState(true)
-  const [showPassword, setShowPassword] = useState(false)
-  const [formData, setFormData] = useState({
-    email: "",
-    password: "",
-    name: "",
-  })
+  const router = useRouter()
+  const [displayName, setDisplayNameState] = useState("")
+  const [isLoading, setIsLoading] = useState(true)
+  const [isSubmitting, setIsSubmitting] = useState(false)
+  const [error, setError] = useState<string | null>(null)
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault()
-    // In production, this would integrate with Firebase Auth
-    console.log(isLogin ? "Login:" : "Signup:", formData)
+  useEffect(() => {
+    // Check if user is already registered
+    if (isRegistered()) {
+      // Already registered, redirect to homepage
+      router.push("/")
+    } else {
+      // Generate a random name as default
+      setDisplayNameState(generateRandomName())
+      setIsLoading(false)
+    }
+  }, [router])
+
+  const handleGenerateRandom = () => {
+    const randomName = generateRandomName()
+    setDisplayNameState(randomName)
   }
 
-  const handleGoogleLogin = () => {
-    // Firebase Google Auth would go here
-    console.log("Google login")
+  const handleContinue = async (e: React.FormEvent) => {
+    e.preventDefault()
+    if (!displayName.trim() || isSubmitting) return
+
+    setIsSubmitting(true)
+    setError(null)
+
+    try {
+      const deviceId = getDeviceId()
+
+      // Save to localStorage (marks as registered)
+      setDisplayName(displayName.trim())
+
+      // Save to Firebase
+      const result = await registerUser(deviceId, displayName.trim())
+
+      if (result.success) {
+        // Redirect to homepage
+        router.push("/")
+      } else {
+        setError(result.message || 'Failed to register. Please try again.')
+      }
+    } catch (error) {
+      console.error('Registration error:', error)
+      setError('Failed to register. Please try again.')
+    } finally {
+      setIsSubmitting(false)
+    }
+  }
+
+  if (isLoading) {
+    return (
+      <div className="flex min-h-screen items-center justify-center">
+        <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent" />
+      </div>
+    )
   }
 
   return (
@@ -50,137 +94,90 @@ export default function LoginPage() {
 
           {/* Card */}
           <div className="rounded-2xl border border-border bg-card p-6 lg:p-8">
-            {/* Tabs */}
-            <div className="mb-6 flex rounded-xl bg-secondary/50 p-1">
-              <button
-                onClick={() => setIsLogin(true)}
-                className={`flex-1 rounded-lg py-2 text-sm font-medium transition-colors ${
-                  isLogin
-                    ? "bg-background text-foreground shadow-sm"
-                    : "text-muted-foreground hover:text-foreground"
-                }`}
-              >
-                Login
-              </button>
-              <button
-                onClick={() => setIsLogin(false)}
-                className={`flex-1 rounded-lg py-2 text-sm font-medium transition-colors ${
-                  !isLogin
-                    ? "bg-background text-foreground shadow-sm"
-                    : "text-muted-foreground hover:text-foreground"
-                }`}
-              >
-                Sign Up
-              </button>
+            <div className="mb-6 text-center">
+              <h1 className="text-2xl font-bold text-foreground">Welcome!</h1>
+              <p className="mt-2 text-sm text-muted-foreground">
+                Choose your display name (one-time setup)
+              </p>
             </div>
 
             {/* Form */}
-            <form onSubmit={handleSubmit} className="space-y-4">
-              {!isLogin && (
-                <div className="space-y-2">
-                  <Label htmlFor="name">Full Name</Label>
-                  <Input
-                    id="name"
-                    placeholder="John Doe"
-                    value={formData.name}
-                    onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                    className="border-border bg-secondary/30"
-                  />
-                </div>
+            <form onSubmit={handleContinue} className="space-y-6">
+              {error && (
+                <Alert variant="destructive">
+                  <AlertDescription>{error}</AlertDescription>
+                </Alert>
               )}
 
               <div className="space-y-2">
-                <Label htmlFor="email">Email</Label>
+                <Label htmlFor="displayname">Your Display Name</Label>
                 <div className="relative">
-                  <Mail className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                  <User className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
                   <Input
-                    id="email"
-                    type="email"
-                    placeholder="you@example.com"
-                    value={formData.email}
-                    onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                    id="displayname"
+                    type="text"
+                    placeholder="Enter a cool name..."
+                    value={displayName}
+                    onChange={(e) => setDisplayNameState(e.target.value)}
                     required
-                    className="border-border bg-secondary/30 pl-10"
-                  />
-                </div>
-              </div>
-
-              <div className="space-y-2">
-                <div className="flex items-center justify-between">
-                  <Label htmlFor="password">Password</Label>
-                  {isLogin && (
-                    <Link
-                      href="/forgot-password"
-                      className="text-xs text-primary hover:underline"
-                    >
-                      Forgot password?
-                    </Link>
-                  )}
-                </div>
-                <div className="relative">
-                  <Lock className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-                  <Input
-                    id="password"
-                    type={showPassword ? "text" : "password"}
-                    placeholder="••••••••"
-                    value={formData.password}
-                    onChange={(e) => setFormData({ ...formData, password: e.target.value })}
-                    required
-                    className="border-border bg-secondary/30 pl-10 pr-10"
+                    className="border-border bg-secondary/30 pl-10 pr-12"
+                    maxLength={20}
+                    disabled={isSubmitting}
                   />
                   <button
                     type="button"
-                    onClick={() => setShowPassword(!showPassword)}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                    onClick={handleGenerateRandom}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-primary transition-colors disabled:opacity-50"
+                    title="Generate random name"
+                    disabled={isSubmitting}
                   >
-                    {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                    <RefreshCw className="h-4 w-4" />
                   </button>
+                </div>
+                <p className="text-xs text-muted-foreground flex items-center gap-1">
+                  <CheckCircle className="h-3 w-3" />
+                  This name is permanent and cannot be changed later
+                </p>
+              </div>
+
+              {/* Random Name Suggestions */}
+              <div className="space-y-2">
+                <p className="text-xs font-medium text-muted-foreground flex items-center gap-1">
+                  <Sparkles className="h-3 w-3" />
+                  Quick picks:
+                </p>
+                <div className="flex flex-wrap gap-2">
+                  {[generateRandomName(), generateRandomName(), generateRandomName()].map((name, i) => (
+                    <button
+                      key={i}
+                      type="button"
+                      onClick={() => setDisplayNameState(name)}
+                      className="rounded-lg border border-border bg-secondary/50 px-3 py-1 text-xs font-medium text-foreground hover:bg-secondary hover:border-primary transition-colors disabled:opacity-50"
+                      disabled={isSubmitting}
+                    >
+                      {name}
+                    </button>
+                  ))}
                 </div>
               </div>
 
               <Button
                 type="submit"
                 className="w-full bg-primary text-primary-foreground hover:bg-primary/90"
+                disabled={!displayName.trim() || isSubmitting}
               >
-                {isLogin ? "Login" : "Create Account"}
+                {isSubmitting ? 'Setting up...' : 'Continue'}
                 <ArrowRight className="ml-2 h-4 w-4" />
               </Button>
             </form>
 
-            {/* Divider */}
-            <div className="my-6 flex items-center gap-4">
-              <div className="h-px flex-1 bg-border" />
-              <span className="text-sm text-muted-foreground">or continue with</span>
-              <div className="h-px flex-1 bg-border" />
+            {/* Info */}
+            <div className="mt-6 rounded-lg bg-amber-50 dark:bg-amber-900/10 border border-amber-200 dark:border-amber-900/50 p-4">
+              <p className="text-xs text-amber-900 dark:text-amber-300">
+                <strong className="font-semibold">Important:</strong> Your display name is permanent and cannot be changed.
+                Choose carefully! No email or account required - everything is stored locally on this device.
+              </p>
             </div>
-
-            {/* Social Login */}
-            <Button
-              type="button"
-              variant="outline"
-              className="w-full bg-transparent"
-              onClick={handleGoogleLogin}
-            >
-              <svg className="mr-2 h-4 w-4" viewBox="0 0 24 24">
-                <path
-                  d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
-                  fill="#4285F4"
-                />
-                <path
-                  d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"
-                  fill="#34A853"
-                />
-                <path
-                  d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"
-                  fill="#FBBC05"
-                />
-                <path
-                  d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"
-                  fill="#EA4335"
-                />
-              </svg>
-              Continue with Google
-            </Button>
 
             {/* Terms */}
             <p className="mt-6 text-center text-xs text-muted-foreground">

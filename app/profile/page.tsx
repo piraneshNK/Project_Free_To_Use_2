@@ -1,206 +1,229 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import Link from "next/link"
 import { motion } from "framer-motion"
-import { User, Bookmark, MessageSquare, Settings, LogOut, ExternalLink } from "lucide-react"
+import { Fingerprint, Copy, User, Lock, Bookmark, Trash2, ExternalLink } from "lucide-react"
 import { Button } from "@/components/ui/button"
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
-import { Badge } from "@/components/ui/badge"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-
-// Mock user data (would come from Firebase Auth in production)
-const mockUser = {
-  name: "Alex Chen",
-  email: "alex@example.com",
-  avatar: "",
-  joinedDate: "January 2024",
-}
-
-// Mock saved tools and comments (would come from database in production)
-const savedTools: any[] = []
-const userComments = [
-  {
-    id: "1",
-    toolName: "Next.js",
-    toolSlug: "nextjs",
-    content: "This framework has completely changed how I build web apps!",
-    timestamp: "2 days ago",
-  },
-  {
-    id: "2",
-    toolName: "Supabase",
-    toolSlug: "supabase",
-    content: "Great Firebase alternative with better PostgreSQL support.",
-    timestamp: "1 week ago",
-  },
-]
+import { Label } from "@/components/ui/label"
+import { Avatar, AvatarFallback } from "@/components/ui/avatar"
+import { getDeviceInfo } from "@/lib/device-auth"
+import { getSavedTools, unsaveTool, type SavedTool } from "@/lib/saved-tools"
 
 export default function ProfilePage() {
-  const [isLoggedIn, setIsLoggedIn] = useState(true)
+  const [deviceId, setDeviceId] = useState("")
+  const [displayName, setDisplayName] = useState("")
+  const [copied, setCopied] = useState(false)
+  const [savedTools, setSavedTools] = useState<SavedTool[]>([])
 
-  if (!isLoggedIn) {
-    return (
-      <div className="pt-16">
-        <div className="flex min-h-[calc(100vh-4rem)] items-center justify-center px-4 py-12">
-          <div className="text-center">
-            <h1 className="mb-4 text-2xl font-bold text-foreground">Please Log In</h1>
-            <p className="mb-8 text-muted-foreground">
-              You need to be logged in to view your profile.
-            </p>
-            <Link href="/login">
-              <Button className="bg-primary text-primary-foreground hover:bg-primary/90">
-                Go to Login
-              </Button>
-            </Link>
-          </div>
-        </div>
-      </div>
-    )
+  useEffect(() => {
+    const info = getDeviceInfo()
+    setDeviceId(info.deviceId)
+    setDisplayName(info.displayName)
+
+    // Load saved tools
+    setSavedTools(getSavedTools())
+  }, [])
+
+  const handleCopyDeviceId = () => {
+    navigator.clipboard.writeText(deviceId)
+    setCopied(true)
+    setTimeout(() => setCopied(false), 2000)
+  }
+
+  const handleUnsave = (id: string) => {
+    if (confirm('Remove this tool from saved?')) {
+      unsaveTool(id)
+      setSavedTools(getSavedTools())
+    }
   }
 
   return (
     <div className="pt-16">
       <div className="mx-auto max-w-4xl px-4 py-12 lg:px-8 lg:py-16">
-        {/* Profile Header */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          className="mb-8 rounded-2xl border border-border bg-card p-6 lg:p-8"
         >
-          <div className="flex flex-col items-center gap-6 sm:flex-row sm:items-start">
-            <Avatar className="h-24 w-24">
-              <AvatarImage src={mockUser.avatar || "/placeholder.svg"} />
-              <AvatarFallback className="bg-primary/10 text-2xl text-primary">
-                {mockUser.name.slice(0, 2).toUpperCase()}
-              </AvatarFallback>
-            </Avatar>
-            <div className="flex-1 text-center sm:text-left">
-              <h1 className="mb-1 text-2xl font-bold text-foreground">{mockUser.name}</h1>
-              <p className="mb-2 text-muted-foreground">{mockUser.email}</p>
-              <p className="text-sm text-muted-foreground">Member since {mockUser.joinedDate}</p>
+          {/* Header */}
+          <div className="mb-8">
+            <h1 className="text-3xl font-bold text-foreground">Profile</h1>
+            <p className="mt-2 text-muted-foreground">
+              View your device information
+            </p>
+          </div>
+
+          {/* Profile Card */}
+          <div className="rounded-2xl border border-border bg-card p-6 lg:p-8">
+            <div className="flex items-start gap-6">
+              {/* Avatar */}
+              <Avatar className="h-20 w-20 border-2 border-primary">
+                <AvatarFallback className="bg-primary/10 text-2xl font-bold text-primary">
+                  {displayName.charAt(0).toUpperCase()}
+                </AvatarFallback>
+              </Avatar>
+
+              {/* Info */}
+              <div className="flex-1">
+                <div className="flex items-center gap-3">
+                  <h2 className="text-2xl font-bold text-foreground">{displayName}</h2>
+                  <Lock className="h-5 w-5 text-muted-foreground" title="Unchangeable" />
+                </div>
+                <p className="mt-1 text-sm text-muted-foreground">
+                  Display name (permanent)
+                </p>
+              </div>
             </div>
-            <div className="flex gap-2">
-              <Button variant="outline" size="sm">
-                <Settings className="mr-2 h-4 w-4" />
-                Settings
-              </Button>
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => setIsLoggedIn(false)}
-                className="text-destructive hover:bg-destructive/10"
-              >
-                <LogOut className="mr-2 h-4 w-4" />
-                Logout
-              </Button>
+
+            {/* Divider */}
+            <div className="my-6 h-px bg-border" />
+
+            {/* Device ID Section */}
+            <div className="space-y-4">
+              <h3 className="font-semibold text-foreground flex items-center gap-2">
+                <Fingerprint className="h-4 w-4" />
+                Device Identification
+              </h3>
+
+              <div className="rounded-lg bg-secondary/30 p-4 space-y-3">
+                <div>
+                  <Label className="text-xs text-muted-foreground">Device ID (Permanent)</Label>
+                  <div className="mt-1 flex items-center gap-2">
+                    <code className="flex-1 rounded bg-background px-3 py-2 text-xs font-mono text-foreground border border-border overflow-x-auto">
+                      {deviceId}
+                    </code>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={handleCopyDeviceId}
+                      className="gap-2 shrink-0"
+                    >
+                      <Copy className="h-3 w-3" />
+                      {copied ? "Copied!" : "Copy"}
+                    </Button>
+                  </div>
+                  <p className="mt-1 text-xs text-muted-foreground">
+                    This ID is unique to this device and never changes
+                  </p>
+                </div>
+
+                <div>
+                  <Label className="text-xs text-muted-foreground">Display Name (Permanent)</Label>
+                  <div className="mt-1 rounded bg-background px-3 py-2 text-sm font-medium text-foreground border border-border flex items-center gap-2">
+                    <User className="h-4 w-4 text-muted-foreground" />
+                    {displayName}
+                    <Lock className="ml-auto h-4 w-4 text-muted-foreground" />
+                  </div>
+                  <p className="mt-1 text-xs text-muted-foreground">
+                    This name was set during registration and cannot be changed
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            {/* Divider */}
+            <div className="my-6 h-px bg-border" />
+
+            {/* How It Works */}
+            <div className="space-y-4">
+              <h3 className="font-semibold text-foreground">How It Works</h3>
+
+              <div className="rounded-lg bg-blue-50 dark:bg-blue-900/10 border border-blue-200 dark:border-blue-900/50 p-4">
+                <ul className="space-y-2 text-xs text-blue-900 dark:text-blue-300">
+                  <li className="flex gap-2">
+                    <span className="font-bold min-w-[80px]">Device ID:</span>
+                    <span>Unique identifier for this device. Used to track your comments and submissions.</span>
+                  </li>
+                  <li className="flex gap-2">
+                    <span className="font-bold min-w-[80px]">Display Name:</span>
+                    <span>What others see on your comments. Set once during registration.</span>
+                  </li>
+                  <li className="flex gap-2">
+                    <span className="font-bold min-w-[80px]">Storage:</span>
+                    <span>Stored locally in your browser AND in Firebase for backup.</span>
+                  </li>
+                  <li className="flex gap-2">
+                    <span className="font-bold min-w-[80px]">Permanent:</span>
+                    <span>Both values cannot be changed after registration.</span>
+                  </li>
+                </ul>
+              </div>
+            </div>
+
+            {/* Divider */}
+            <div className="my-6 h-px bg-border" />
+
+            {/* Saved Tools Section */}
+            <div className="space-y-4">
+              <h3 className="font-semibold text-foreground flex items-center gap-2">
+                <Bookmark className="h-4 w-4" />
+                Saved Tools ({savedTools.length})
+              </h3>
+
+              {savedTools.length === 0 ? (
+                <div className="rounded-lg border border-dashed border-border bg-secondary/20 p-8 text-center">
+                  <Bookmark className="mx-auto mb-3 h-12 w-12 text-muted-foreground" />
+                  <p className="text-sm text-muted-foreground">
+                    No saved tools yet. Click the "Save" button on any tool page to save it here!
+                  </p>
+                </div>
+              ) : (
+                <div className="space-y-2">
+                  {savedTools.map((tool) => (
+                    <div
+                      key={tool.id}
+                      className="flex items-center justify-between rounded-lg border border-border bg-card p-3 hover:bg-secondary/50 transition-colors"
+                    >
+                      <div className="flex items-center gap-3 flex-1">
+                        <Bookmark className="h-4 w-4 text-primary" />
+                        <div className="flex-1">
+                          <Link
+                            href={`/tool/${tool.slug}`}
+                            className="font-medium text-foreground hover:text-primary transition-colors"
+                          >
+                            {tool.name}
+                          </Link>
+                          <p className="text-xs text-muted-foreground">
+                            Saved {new Date(tool.savedAt).toLocaleDateString()}
+                          </p>
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <Link href={`/tool/${tool.slug}`}>
+                          <Button size="sm" variant="ghost" className="gap-2">
+                            <ExternalLink className="h-3 w-3" />
+                            View
+                          </Button>
+                        </Link>
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          onClick={() => handleUnsave(tool.id)}
+                          className="text-red-600 hover:bg-red-50 hover:text-red-700 dark:hover:bg-red-900/10"
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
           </div>
+
+          {/* Additional Info */}
+          <div className="mt-6 rounded-lg bg-secondary/30 p-4">
+            <h4 className="mb-2 font-semibold text-sm text-foreground">Privacy & Data</h4>
+            <ul className="space-y-1 text-xs text-muted-foreground">
+              <li>• Your Device ID is used to track your contributions (submissions, comments)</li>
+              <li>• Your Display Name appears publicly on your posts</li>
+              <li>• Both are stored in your browser AND Firebase for persistence</li>
+              <li>• Neither can be changed after initial registration</li>
+              <li>• Clearing browser data will require re-registration with a new Device ID</li>
+              <li>• Comments are moderated for profanity and inappropriate content</li>
+            </ul>
+          </div>
         </motion.div>
-
-        {/* Tabs */}
-        <Tabs defaultValue="saved" className="space-y-6">
-          <TabsList className="grid w-full grid-cols-2 bg-secondary/50">
-            <TabsTrigger value="saved" className="data-[state=active]:bg-background">
-              <Bookmark className="mr-2 h-4 w-4" />
-              Saved Tools ({savedTools.length})
-            </TabsTrigger>
-            <TabsTrigger value="comments" className="data-[state=active]:bg-background">
-              <MessageSquare className="mr-2 h-4 w-4" />
-              Comments ({userComments.length})
-            </TabsTrigger>
-          </TabsList>
-
-          {/* Saved Tools Tab */}
-          <TabsContent value="saved">
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              className="space-y-4"
-            >
-              {savedTools.length > 0 ? (
-                savedTools.map((tool) => (
-                  <div
-                    key={tool.id}
-                    className="flex items-center justify-between rounded-xl border border-border bg-card p-4"
-                  >
-                    <div className="flex items-center gap-4">
-                      <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-secondary text-lg font-bold text-primary">
-                        {tool.name.slice(0, 2).toUpperCase()}
-                      </div>
-                      <div>
-                        <Link
-                          href={`/tool/${tool.slug}`}
-                          className="font-medium text-foreground hover:text-primary"
-                        >
-                          {tool.name}
-                        </Link>
-                        <p className="text-sm text-muted-foreground">{tool.category}</p>
-                      </div>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <Badge variant="secondary">{tool.type}</Badge>
-                      <a href={tool.url} target="_blank" rel="noopener noreferrer">
-                        <Button size="sm" variant="outline">
-                          <ExternalLink className="h-4 w-4" />
-                        </Button>
-                      </a>
-                    </div>
-                  </div>
-                ))
-              ) : (
-                <div className="rounded-xl border border-border bg-card p-8 text-center">
-                  <Bookmark className="mx-auto mb-4 h-8 w-8 text-muted-foreground" />
-                  <p className="text-muted-foreground">No saved tools yet.</p>
-                  <Link href="/apps">
-                    <Button className="mt-4 bg-primary text-primary-foreground">
-                      Explore Tools
-                    </Button>
-                  </Link>
-                </div>
-              )}
-            </motion.div>
-          </TabsContent>
-
-          {/* Comments Tab */}
-          <TabsContent value="comments">
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              className="space-y-4"
-            >
-              {userComments.length > 0 ? (
-                userComments.map((comment) => (
-                  <div
-                    key={comment.id}
-                    className="rounded-xl border border-border bg-card p-4"
-                  >
-                    <div className="mb-2 flex items-center justify-between">
-                      <Link
-                        href={`/tool/${comment.toolSlug}`}
-                        className="font-medium text-foreground hover:text-primary"
-                      >
-                        {comment.toolName}
-                      </Link>
-                      <span className="text-sm text-muted-foreground">{comment.timestamp}</span>
-                    </div>
-                    <p className="text-muted-foreground">{comment.content}</p>
-                  </div>
-                ))
-              ) : (
-                <div className="rounded-xl border border-border bg-card p-8 text-center">
-                  <MessageSquare className="mx-auto mb-4 h-8 w-8 text-muted-foreground" />
-                  <p className="text-muted-foreground">No comments yet.</p>
-                  <Link href="/apps">
-                    <Button className="mt-4 bg-primary text-primary-foreground">
-                      Explore Tools
-                    </Button>
-                  </Link>
-                </div>
-              )}
-            </motion.div>
-          </TabsContent>
-        </Tabs>
       </div>
     </div>
   )

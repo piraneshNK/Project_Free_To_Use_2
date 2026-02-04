@@ -2,11 +2,12 @@
 
 import Link from "next/link"
 import Image from "next/image"
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { motion, AnimatePresence } from "framer-motion"
 import { Menu, X, User } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { ThemeToggle } from "@/components/theme-toggle"
+import { isRegistered } from "@/lib/device-auth"
 
 const navLinks = [
   { href: "/", label: "Home" },
@@ -20,6 +21,12 @@ const navLinks = [
 
 export function Navbar() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
+  const [isLoggedIn, setIsLoggedIn] = useState(false)
+
+  useEffect(() => {
+    // Check if user is registered
+    setIsLoggedIn(isRegistered())
+  }, [])
 
   return (
     <header className="fixed top-0 left-0 right-0 z-50 border-b border-border/50 bg-background/80 backdrop-blur-xl">
@@ -67,12 +74,21 @@ export function Navbar() {
               Submit Tool
             </Button>
           </Link>
-          <Link href="/login">
-            <Button size="sm" className="hidden bg-primary text-primary-foreground hover:bg-primary/90 sm:flex">
-              <User className="mr-2 h-4 w-4" />
-              Login
-            </Button>
-          </Link>
+          {isLoggedIn ? (
+            <Link href="/profile">
+              <Button size="sm" className="hidden bg-primary text-primary-foreground hover:bg-primary/90 sm:flex">
+                <User className="mr-2 h-4 w-4" />
+                Profile
+              </Button>
+            </Link>
+          ) : (
+            <Link href="/login">
+              <Button size="sm" className="hidden bg-primary text-primary-foreground hover:bg-primary/90 sm:flex">
+                <User className="mr-2 h-4 w-4" />
+                Login
+              </Button>
+            </Link>
+          )}
 
           {/* Mobile Menu Button */}
           <button
