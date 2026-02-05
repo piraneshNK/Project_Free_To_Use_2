@@ -25,7 +25,7 @@ export default function RootLayout({
         <html lang="en" suppressHydrationWarning>
             <body className={outfit.className}>
                 <Script
-                    src="https://www.googletagmanager.com/gtag/js?id=G-ZLV6CJ414R"
+                    src="https://www.googletagmanager.com/gtag/js?id=G-RKB7R57LZQ"
                     strategy="afterInteractive"
                 />
                 <Script id="google-analytics" strategy="afterInteractive">
@@ -34,7 +34,7 @@ export default function RootLayout({
             function gtag(){dataLayer.push(arguments);}
             gtag('js', new Date());
 
-            gtag('config', 'G-ZLV6CJ414R');
+            gtag('config', 'G-RKB7R57LZQ');
           `}
                 </Script>
                 <ThemeProvider
