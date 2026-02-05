@@ -75,6 +75,7 @@ export function Comments({ toolSlug }: CommentsProps) {
             // 2. Subscribe to new comments
             // Only subscribe if not already subscribed
             if (!channelRef.current) {
+                console.log(`[Supabase] Subscribing to channel: comments-${toolSlug}`)
                 const channel = supabase
                     .channel(`comments-${toolSlug}`)
                     .on(
@@ -86,11 +87,14 @@ export function Comments({ toolSlug }: CommentsProps) {
                             filter: `tool_slug=eq.${toolSlug}`
                         },
                         (payload) => {
+                            console.log('[Supabase] Comment received:', payload)
                             const newComment = transformSupabaseComment(payload.new)
                             setComments((prev) => [newComment, ...prev])
                         }
                     )
-                    .subscribe()
+                    .subscribe((status) => {
+                        console.log(`[Supabase] Subscription status: ${status}`)
+                    })
 
                 channelRef.current = channel
             }
