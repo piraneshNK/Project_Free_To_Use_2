@@ -29,7 +29,7 @@ export function Comments({ toolSlug }: CommentsProps) {
     const [isConnected, setIsConnected] = useState(false)
     const [userIdentity, setUserIdentity] = useState("Guest User")
     const containerRef = useRef<HTMLDivElement>(null)
-    const commentsRef = useRef(ref(database, `comments/${toolSlug}`))
+    const commentsRef = useRef(database ? ref(database, `comments/${toolSlug}`) : null)
 
     // Initialize user identity from localStorage
     useEffect(() => {
@@ -47,6 +47,8 @@ export function Comments({ toolSlug }: CommentsProps) {
 
     // Lazy load comments only when section becomes visible
     useEffect(() => {
+        if (!commentsRef.current) return
+
         const observer = new IntersectionObserver(
             (entries) => {
                 entries.forEach((entry) => {
@@ -73,11 +75,17 @@ export function Comments({ toolSlug }: CommentsProps) {
     }, [isConnected])
 
     const connectToFirebase = () => {
+        const dbRef = commentsRef.current
+        if (!dbRef) {
+            console.warn("Firebase not configured, skipping connection")
+            return
+        }
+
         setLoading(true)
         setIsConnected(true)
 
         onValue(
-            commentsRef.current,
+            dbRef,
             (snapshot) => {
                 if (snapshot.exists()) {
                     const data = snapshot.val()
@@ -109,8 +117,9 @@ export function Comments({ toolSlug }: CommentsProps) {
     }
 
     const disconnectFromFirebase = () => {
-        if (isConnected) {
-            off(commentsRef.current)
+        const dbRef = commentsRef.current
+        if (isConnected && dbRef) {
+            off(dbRef)
             setIsConnected(false)
         }
     }
@@ -118,13 +127,21 @@ export function Comments({ toolSlug }: CommentsProps) {
     const handleSubmit = async () => {
         if (!comment.trim()) return
 
+        const dbRef = commentsRef.current
+
+        // Check if database is configured
+        if (!dbRef) {
+            toast.error("Comments are currently disabled (database not configured)")
+            return
+        }
+
         // Ensure we're connected before posting
         if (!isConnected) {
             connectToFirebase()
         }
 
         try {
-            await push(commentsRef.current, {
+            await push(dbRef, {
                 author: userIdentity,
                 content: comment,
                 timestamp: Date.now(),

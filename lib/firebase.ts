@@ -1,5 +1,5 @@
 // Firebase configuration and initialization
-import { initializeApp, getApps, getApp } from 'firebase/app'
+import { initializeApp, getApps, getApp, FirebaseApp } from 'firebase/app'
 import { getDatabase, Database } from 'firebase/database'
 
 const firebaseConfig = {
@@ -12,12 +12,6 @@ const firebaseConfig = {
     appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID,
 }
 
-// Initialize Firebase (singleton pattern)
-const app = getApps().length === 0 ? initializeApp(firebaseConfig) : getApp()
-
-// Get Realtime Database instance
-export const database: Database = getDatabase(app)
-
 // Check if Firebase is configured
 export const isFirebaseConfigured = (): boolean => {
     return !!(
@@ -25,3 +19,21 @@ export const isFirebaseConfigured = (): boolean => {
         process.env.NEXT_PUBLIC_FIREBASE_DATABASE_URL
     )
 }
+
+// Initialize Firebase (singleton pattern)
+let app: FirebaseApp | null = null
+let database: Database | null = null
+
+if (isFirebaseConfigured()) {
+    try {
+        app = getApps().length === 0 ? initializeApp(firebaseConfig) : getApp()
+        database = getDatabase(app)
+    } catch (error) {
+        console.error("Firebase initialization error:", error)
+    }
+} else {
+    console.warn("Firebase environment variables missing. Database features will be disabled.")
+}
+
+export { app, database }
+
