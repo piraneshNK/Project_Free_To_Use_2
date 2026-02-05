@@ -4,10 +4,8 @@ import { useState, useEffect, useRef } from "react"
 import { Button } from "@/components/ui/button"
 import { Textarea } from "@/components/ui/textarea"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
-import { Send } from "lucide-react"
-import { supabase } from "@/lib/supabase"
 import { toast } from "sonner"
-import type { RealtimeChannel } from "@supabase/supabase-js"
+import { Send } from "lucide-react"
 
 interface Comment {
     id: string
@@ -27,10 +25,8 @@ export function Comments({ toolSlug }: CommentsProps) {
     const [comment, setComment] = useState("")
     const [comments, setComments] = useState<Comment[]>([])
     const [loading, setLoading] = useState(false)
-    const [isConnected, setIsConnected] = useState(false)
     const [userIdentity, setUserIdentity] = useState("Guest User")
     const containerRef = useRef<HTMLDivElement>(null)
-    const channelRef = useRef<RealtimeChannel | null>(null)
 
     // Initialize user identity from localStorage
     useEffect(() => {
@@ -46,59 +42,28 @@ export function Comments({ toolSlug }: CommentsProps) {
         }
     }, [])
 
-    // Load comments immediately on mount
+    // Fetch comments on mount
     useEffect(() => {
-        connectToSupabase()
-
-        return () => {
-            disconnectFromSupabase()
-        }
+        fetchComments()
     }, [toolSlug])
 
-    const connectToSupabase = async () => {
+    const fetchComments = async () => {
         setLoading(true)
-        setIsConnected(true)
-
         try {
-            // 1. Fetch existing comments
-            const { data, error } = await supabase
-                .from('comments')
-                .select('*')
-                .eq('tool_slug', toolSlug)
-                .order('created_at', { ascending: false })
+            const res = await fetch(`/api/comments?slug=${toolSlug}`)
+            if (!res.ok) throw new Error("Failed to fetch")
 
-            if (error) throw error
-
-            const loadedComments = (data || []).map(transformSupabaseComment)
-            setComments(loadedComments)
-
-            // 2. Subscribe to new comments
-            // Only subscribe if not already subscribed
-            if (!channelRef.current) {
-                console.log(`[Supabase] Subscribing to channel: comments-${toolSlug}`)
-                const channel = supabase
-                    .channel(`comments-${toolSlug}`)
-                    .on(
-                        'postgres_changes',
-                        {
-                            event: 'INSERT',
-                            schema: 'public',
-                            table: 'comments',
-                            filter: `tool_slug=eq.${toolSlug}`
-                        },
-                        (payload) => {
-                            console.log('[Supabase] Comment received:', payload)
-                            const newComment = transformSupabaseComment(payload.new)
-                            setComments((prev) => [newComment, ...prev])
-                        }
-                    )
-                    .subscribe((status) => {
-                        console.log(`[Supabase] Subscription status: ${status}`)
-                    })
-
-                channelRef.current = channel
-            }
-
+            const data = await res.json()
+            const formattedComments = data.map((c: any) => ({
+                id: c._id,
+                author: c.author,
+                content: c.content,
+                avatar: c.avatar || "/placeholder-user.jpg",
+                timestamp: c.timestamp,
+                date: formatDate(c.timestamp),
+                tool_slug: c.tool_slug
+            }))
+            setComments(formattedComments)
         } catch (error) {
             console.error("Error loading comments:", error)
             toast.error("Failed to load comments")
@@ -107,51 +72,28 @@ export function Comments({ toolSlug }: CommentsProps) {
         }
     }
 
-    const disconnectFromSupabase = () => {
-        if (channelRef.current) {
-            supabase.removeChannel(channelRef.current)
-            channelRef.current = null
-        }
-        setIsConnected(false)
-    }
-
-    const transformSupabaseComment = (record: any): Comment => {
-        const timestamp = new Date(record.created_at).getTime()
-        return {
-            id: record.id.toString(),
-            author: record.author,
-            content: record.content,
-            avatar: record.avatar || "/placeholder-user.jpg",
-            timestamp: timestamp,
-            date: formatDate(timestamp),
-            tool_slug: record.tool_slug
-        }
-    }
-
     const handleSubmit = async () => {
         if (!comment.trim()) return
 
-        // Ensure we're connected
-        if (!isConnected) {
-            connectToSupabase()
-        }
-
         try {
-            const { error } = await supabase
-                .from('comments')
-                .insert([
-                    {
-                        tool_slug: toolSlug,
-                        author: userIdentity,
-                        content: comment,
-                        avatar: "/placeholder-user.jpg",
-                        // created_at is automatic
-                    }
-                ])
+            const newComment = {
+                tool_slug: toolSlug,
+                author: userIdentity,
+                content: comment,
+                avatar: "/placeholder-user.jpg",
+            }
 
-            if (error) throw error
+            const res = await fetch('/api/comments', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(newComment)
+            })
 
+            if (!res.ok) throw new Error("Failed to post")
+
+            // Optimistic update or refetch
             setComment("")
+            fetchComments() // Simple refetch to ensure consistency
             toast.success("Comment posted!")
         } catch (error) {
             console.error("Error posting comment:", error)
