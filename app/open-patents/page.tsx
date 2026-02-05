@@ -7,21 +7,6 @@ import { ToolCard, type Tool } from "@/components/tool-card"
 import { SearchFilter } from "@/components/search-filter"
 import { BreadcrumbSchema, ItemListSchema } from "@/components/json-ld"
 import { FAQSection } from "@/components/faq-section"
-import type { Metadata } from "next"
-
-export const metadata: Metadata = {
-  title: "Best Free Open Patents & Innovation Resources 2024 | Patent Search Tools",
-  description: "Discover free patent databases, prior art search tools, and innovation resources. Access Google Patents, USPTO, EPO, and more. Free patent search and analytics.",
-  openGraph: {
-    title: "Best Free Open Patents & Innovation Directory | Project Free To Use",
-    description: "Curated collection of patent databases, prior art search tools, and innovation resources. All free to access.",
-    type: "website",
-    url: "https://projectfreetouse.com/open-patents",
-  },
-  alternates: {
-    canonical: "https://projectfreetouse.com/open-patents",
-  },
-}
 
 const patentCategories = [
   { id: "ai", label: "AI & ML" },
