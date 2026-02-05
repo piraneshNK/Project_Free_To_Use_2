@@ -27,8 +27,23 @@ export function Comments({ toolSlug }: CommentsProps) {
     const [comments, setComments] = useState<Comment[]>([])
     const [loading, setLoading] = useState(false)
     const [isConnected, setIsConnected] = useState(false)
+    const [userIdentity, setUserIdentity] = useState("Guest User")
     const containerRef = useRef<HTMLDivElement>(null)
     const commentsRef = useRef(ref(database, `comments/${toolSlug}`))
+
+    // Initialize user identity from localStorage
+    useEffect(() => {
+        const storedIdentity = localStorage.getItem("pftu_user_identity")
+        if (storedIdentity) {
+            setUserIdentity(storedIdentity)
+        } else {
+            // Generate unique ID: User-XXXXX
+            const randomId = Math.random().toString(36).substring(2, 7).toUpperCase()
+            const newIdentity = `User-${randomId}`
+            localStorage.setItem("pftu_user_identity", newIdentity)
+            setUserIdentity(newIdentity)
+        }
+    }, [])
 
     // Lazy load comments only when section becomes visible
     useEffect(() => {
@@ -110,7 +125,7 @@ export function Comments({ toolSlug }: CommentsProps) {
 
         try {
             await push(commentsRef.current, {
-                author: "Guest User",
+                author: userIdentity,
                 content: comment,
                 timestamp: Date.now(),
                 avatar: "/placeholder-user.jpg",
@@ -150,7 +165,7 @@ export function Comments({ toolSlug }: CommentsProps) {
             <div className="mb-8 flex gap-4">
                 <Avatar>
                     <AvatarImage src="/placeholder-user.jpg" />
-                    <AvatarFallback>GU</AvatarFallback>
+                    <AvatarFallback>{userIdentity.charAt(0)}</AvatarFallback>
                 </Avatar>
                 <div className="flex-1 space-y-4">
                     <Textarea

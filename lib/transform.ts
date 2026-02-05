@@ -35,14 +35,14 @@ export function parseBoolean(value: string): boolean {
  */
 export function transformAITool(aiTool: AITool): Tool {
     return {
-        id: aiTool.id,
-        slug: slugify(aiTool.name),
-        name: aiTool.name,
-        description: aiTool.description,
-        category: aiTool.category,
+        id: aiTool.id || 'missing-id',
+        slug: slugify(aiTool.name || 'unnamed-tool'),
+        name: aiTool.name || 'Unnamed Tool',
+        description: aiTool.description || '',
+        category: aiTool.category || 'Uncategorized',
         type: 'app',
         tags: parseTags(aiTool.tags),
-        url: aiTool.website,
+        url: aiTool.website || '#',
         logoUrl: getFaviconUrl(aiTool.website),
         isFree: true,
         github: aiTool.github || undefined,
@@ -57,14 +57,14 @@ export function transformAITool(aiTool: AITool): Tool {
  */
 export function transformAPI(api: API): Tool {
     return {
-        id: api.id,
-        slug: slugify(api.name),
-        name: api.name,
-        description: api.description,
-        category: api.api_type,
+        id: api.id || 'missing-id',
+        slug: slugify(api.name || 'unnamed-api'),
+        name: api.name || 'Unnamed API',
+        description: api.description || '',
+        category: api.api_type || 'Uncategorized',
         type: 'api',
-        tags: [api.api_type, api.provider].filter(Boolean),
-        url: api.website,
+        tags: [api.api_type, api.provider].filter(Boolean) as string[],
+        url: api.website || '#',
         logoUrl: getFaviconUrl(api.website),
         isFree: parseBoolean(api.free_tier),
         endpoint: api.docs || undefined,
@@ -79,14 +79,14 @@ export function transformAPI(api: API): Tool {
  */
 export function transformOpenSoftware(software: OpenSoftware): Tool {
     return {
-        id: software.id,
-        slug: slugify(software.name),
-        name: software.name,
-        description: software.description,
-        category: software.category,
+        id: software.id || 'missing-id',
+        slug: slugify(software.name || 'unnamed-software'),
+        name: software.name || 'Unnamed Software',
+        description: software.description || '',
+        category: software.category || 'Uncategorized',
         type: 'open-source',
-        tags: [software.category, software.os, software.license].filter(Boolean),
-        url: software.website,
+        tags: [software.category, software.os, software.license].filter(Boolean) as string[],
+        url: software.website || '#',
         logoUrl: getFaviconUrl(software.website),
         isFree: true,
         github: software.github || undefined,
@@ -101,14 +101,14 @@ export function transformOpenSoftware(software: OpenSoftware): Tool {
  */
 export function transformOpenPattern(pattern: OpenPattern): Tool {
     return {
-        id: pattern.id,
-        slug: slugify(pattern.name),
-        name: pattern.name,
-        description: pattern.description,
-        category: pattern.pattern_type,
+        id: pattern.id || 'missing-id',
+        slug: slugify(pattern.name || 'unnamed-pattern'),
+        name: pattern.name || 'Unnamed Pattern',
+        description: pattern.description || '',
+        category: pattern.pattern_type || 'Uncategorized',
         type: 'patent',
         tags: parseTags(pattern.tags),
-        url: pattern.source,
+        url: pattern.source || '#',
         logoUrl: getFaviconUrl(pattern.source),
         isFree: true,
         featured: parseBoolean(pattern.featured),
@@ -120,15 +120,15 @@ export function transformOpenPattern(pattern: OpenPattern): Tool {
  * Transforms LLM Model data from Google Sheets to Tool format
  */
 export function transformLLMModel(model: LLMModel): Tool {
-    const url = model.huggingface || model.github
+    const url = model.huggingface || model.github || '#'
     return {
-        id: model.id,
-        slug: slugify(model.name),
-        name: model.name,
-        description: model.description,
-        category: model.model_type,
+        id: model.id || 'missing-id',
+        slug: slugify(model.name || 'unnamed-model'),
+        name: model.name || 'Unnamed Model',
+        description: model.description || '',
+        category: model.model_type || 'Uncategorized',
         type: 'app',
-        tags: [model.model_type, model.provider, model.license].filter(Boolean),
+        tags: [model.model_type, model.provider, model.license].filter(Boolean) as string[],
         url: url,
         logoUrl: getFaviconUrl(url),
         isFree: true,
