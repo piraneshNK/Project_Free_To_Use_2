@@ -2,10 +2,10 @@
 import { MongoClient, ServerApiVersion } from 'mongodb'
 
 if (!process.env.MONGODB_URI) {
-    throw new Error('Invalid/Missing environment variable: "MONGODB_URI"')
+    console.warn('Invalid/Missing environment variable: "MONGODB_URI". Using placeholder for build.')
 }
 
-const uri = process.env.MONGODB_URI
+const uri = process.env.MONGODB_URI || "mongodb://placeholder:27017"
 const options = {
     serverApi: {
         version: ServerApiVersion.v1,
