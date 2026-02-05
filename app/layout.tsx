@@ -11,6 +11,9 @@ const outfit = Outfit({ subsets: ["latin"] })
 export const metadata: Metadata = {
     title: "Project Free To Use - Free AI Tools, APIs & Open Source",
     description: "Discover the best free AI tools, APIs, open source software, and patterns. A curated directory for developers and creators.",
+    verification: {
+        google: "hlRBJ-UptLUAi0_Qamw24aukNFkWK5Iu3qdu6bXxHg8",
+    },
 }
 
 export default function RootLayout({
