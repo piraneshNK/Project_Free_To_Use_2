@@ -7,6 +7,21 @@ import { ToolCard, type Tool } from "@/components/tool-card"
 import { SearchFilter } from "@/components/search-filter"
 import { BreadcrumbSchema, ItemListSchema } from "@/components/json-ld"
 import { FAQSection } from "@/components/faq-section"
+import type { Metadata } from "next"
+
+export const metadata: Metadata = {
+  title: "Best Free APIs Directory 2024 | AI, Weather, Finance APIs",
+  description: "Discover the best free APIs for developers. Access free AI APIs, weather APIs, finance APIs, and developer tools. No credit card required. Verified free tiers.",
+  openGraph: {
+    title: "Best Free APIs Directory 2024 | Project Free To Use",
+    description: "Access hundreds of free APIs for AI, weather, finance, and development. All verified to offer genuine free tiers.",
+    type: "website",
+    url: "https://projectfreetouse.com/apis",
+  },
+  alternates: {
+    canonical: "https://projectfreetouse.com/apis",
+  },
+}
 
 const apiCategories = [
   { id: "ai", label: "AI APIs" },

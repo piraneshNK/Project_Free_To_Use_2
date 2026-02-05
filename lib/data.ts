@@ -98,6 +98,16 @@ export async function getToolsByCategory(category: string): Promise<Tool[]> {
   return tools.filter((tool) => tool.category.toLowerCase() === category.toLowerCase())
 }
 
+/**
+ * Gets related tools based on category
+ */
+export async function getRelatedTools(currentTool: Tool, limit: number = 3): Promise<Tool[]> {
+  const tools = await getAllTools()
+  return tools
+    .filter((tool) => tool.category === currentTool.category && tool.id !== currentTool.id)
+    .slice(0, limit)
+}
+
 // Legacy exports for backward compatibility
 export const categories = [
   { id: "writing", label: "Writing AI", icon: "pen" },

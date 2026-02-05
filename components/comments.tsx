@@ -1,220 +1,209 @@
 "use client"
 
-import { useState, useEffect } from "react"
-import { motion, AnimatePresence } from "framer-motion"
-import { MessageSquare, Send, Trash2, AlertCircle } from "lucide-react"
+import { useState, useEffect, useRef } from "react"
 import { Button } from "@/components/ui/button"
 import { Textarea } from "@/components/ui/textarea"
-import { Avatar, AvatarFallback } from "@/components/ui/avatar"
-import { Alert, AlertDescription } from "@/components/ui/alert"
-import { getDeviceId, getShortDeviceId } from "@/lib/device-auth"
-import { addComment, getComments, deleteComment, type Comment } from "@/lib/comments"
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
+import { Send } from "lucide-react"
+import { database } from "@/lib/firebase"
+import { ref, push, onValue, off } from "firebase/database"
+import { toast } from "sonner"
+
+interface Comment {
+    id: string
+    author: string
+    avatar?: string
+    content: string
+    timestamp: number
+    date?: string
+}
 
 interface CommentsProps {
-  toolSlug: string
+    toolSlug: string
 }
 
 export function Comments({ toolSlug }: CommentsProps) {
-  const [comments, setComments] = useState<Comment[]>([])
-  const [newComment, setNewComment] = useState("")
-  const [isSubmitting, setIsSubmitting] = useState(false)
-  const [isLoading, setIsLoading] = useState(true)
-  const [deviceId, setDeviceId] = useState("")
-  const [shortId, setShortId] = useState("")
-  const [error, setError] = useState<string | null>(null)
+    const [comment, setComment] = useState("")
+    const [comments, setComments] = useState<Comment[]>([])
+    const [loading, setLoading] = useState(false)
+    const [isConnected, setIsConnected] = useState(false)
+    const containerRef = useRef<HTMLDivElement>(null)
+    const commentsRef = useRef(ref(database, `comments/${toolSlug}`))
 
-  useEffect(() => {
-    // Get device info
-    setDeviceId(getDeviceId())
-    setShortId(getShortDeviceId())
+    // Lazy load comments only when section becomes visible
+    useEffect(() => {
+        const observer = new IntersectionObserver(
+            (entries) => {
+                entries.forEach((entry) => {
+                    if (entry.isIntersecting && !isConnected) {
+                        // User scrolled to comments section - connect to Firebase
+                        connectToFirebase()
+                    } else if (!entry.isIntersecting && isConnected) {
+                        // User scrolled away - disconnect to save connections
+                        disconnectFromFirebase()
+                    }
+                })
+            },
+            { threshold: 0.1, rootMargin: "50px" }
+        )
 
-    // Load comments
-    loadComments()
-  }, [toolSlug])
+        if (containerRef.current) {
+            observer.observe(containerRef.current)
+        }
 
-  const loadComments = async () => {
-    setIsLoading(true)
-    try {
-      const fetchedComments = await getComments(toolSlug)
-      setComments(fetchedComments)
-    } catch (error) {
-      console.error('Error loading comments:', error)
-    } finally {
-      setIsLoading(false)
+        return () => {
+            observer.disconnect()
+            disconnectFromFirebase()
+        }
+    }, [isConnected])
+
+    const connectToFirebase = () => {
+        setLoading(true)
+        setIsConnected(true)
+
+        onValue(
+            commentsRef.current,
+            (snapshot) => {
+                if (snapshot.exists()) {
+                    const data = snapshot.val()
+                    const commentsArray: Comment[] = Object.entries(data).map(
+                        ([id, value]: [string, any]) => ({
+                            id,
+                            author: value.author || "Guest User",
+                            content: value.content,
+                            timestamp: value.timestamp,
+                            date: formatDate(value.timestamp),
+                            avatar: value.avatar || "/placeholder-user.jpg",
+                        })
+                    )
+
+                    // Sort by newest first
+                    commentsArray.sort((a, b) => b.timestamp - a.timestamp)
+                    setComments(commentsArray)
+                } else {
+                    setComments([])
+                }
+                setLoading(false)
+            },
+            (error) => {
+                console.error("Error fetching comments:", error)
+                toast.error("Failed to load comments")
+                setLoading(false)
+            }
+        )
     }
-  }
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
-    if (!newComment.trim() || isSubmitting) return
-
-    setIsSubmitting(true)
-    setError(null)
-
-    try {
-      const result = await addComment(toolSlug, deviceId, newComment)
-
-      if (result.success) {
-        setNewComment("")
-        await loadComments() // Reload comments
-      } else {
-        // Show profanity/validation error
-        setError(result.message || 'Failed to post comment')
-      }
-    } catch (error) {
-      console.error('Error posting comment:', error)
-      setError('Failed to post comment. Please try again.')
-    } finally {
-      setIsSubmitting(false)
+    const disconnectFromFirebase = () => {
+        if (isConnected) {
+            off(commentsRef.current)
+            setIsConnected(false)
+        }
     }
-  }
 
-  const handleDelete = async (commentId: string) => {
-    if (!confirm('Delete this comment?')) return
+    const handleSubmit = async () => {
+        if (!comment.trim()) return
 
-    try {
-      const result = await deleteComment(commentId, deviceId)
-      if (result.success) {
-        await loadComments()
-      } else {
-        alert(result.message || 'Failed to delete comment')
-      }
-    } catch (error) {
-      console.error('Error deleting comment:', error)
+        // Ensure we're connected before posting
+        if (!isConnected) {
+            connectToFirebase()
+        }
+
+        try {
+            await push(commentsRef.current, {
+                author: "Guest User",
+                content: comment,
+                timestamp: Date.now(),
+                avatar: "/placeholder-user.jpg",
+            })
+
+            setComment("")
+            toast.success("Comment posted!")
+        } catch (error) {
+            console.error("Error posting comment:", error)
+            toast.error("Failed to post comment")
+        }
     }
-  }
 
-  const formatTimestamp = (date: Date) => {
-    const now = new Date()
-    const diff = now.getTime() - date.getTime()
-    const minutes = Math.floor(diff / 60000)
-    const hours = Math.floor(diff / 3600000)
-    const days = Math.floor(diff / 86400000)
+    const formatDate = (timestamp: number): string => {
+        const now = Date.now()
+        const diff = now - timestamp
 
-    if (minutes < 1) return 'Just now'
-    if (minutes < 60) return `${minutes}m ago`
-    if (hours < 24) return `${hours}h ago`
-    if (days < 7) return `${days}d ago`
-    return date.toLocaleDateString()
-  }
+        const minutes = Math.floor(diff / 60000)
+        const hours = Math.floor(diff / 3600000)
+        const days = Math.floor(diff / 86400000)
 
-  const getShortId = (fullId: string) => {
-    return fullId.slice(-8)
-  }
+        if (minutes < 1) return "Just now"
+        if (minutes < 60) return `${minutes} minute${minutes > 1 ? "s" : ""} ago`
+        if (hours < 24) return `${hours} hour${hours > 1 ? "s" : ""} ago`
+        if (days < 7) return `${days} day${days > 1 ? "s" : ""} ago`
 
-  return (
-    <div className="mt-12 border-t border-border pt-8">
-      <div className="mb-6 flex items-center gap-2">
-        <MessageSquare className="h-5 w-5 text-primary" />
-        <h2 className="text-2xl font-bold text-foreground">
-          Comments ({comments.length})
-        </h2>
-      </div>
+        return new Date(timestamp).toLocaleDateString()
+    }
 
-      {/* Comment Form */}
-      <form onSubmit={handleSubmit} className="mb-8">
-        <div className="rounded-xl border border-border bg-card p-4">
-          <div className="mb-3 flex items-center gap-2">
-            <Avatar className="h-8 w-8">
-              <AvatarFallback className="bg-primary/10 text-sm font-bold text-primary font-mono">
-                {shortId.substring(0, 2).toUpperCase()}
-              </AvatarFallback>
-            </Avatar>
-            <span className="text-sm font-medium text-foreground font-mono">{shortId}</span>
-          </div>
+    return (
+        <div ref={containerRef} className="rounded-2xl border border-border bg-card p-6 lg:p-8">
+            <h3 className="mb-6 text-xl font-bold text-foreground">
+                Comments ({loading ? "..." : comments.length})
+            </h3>
 
-          {/* Error Alert */}
-          {error && (
-            <Alert variant="destructive" className="mb-3">
-              <AlertCircle className="h-4 w-4" />
-              <AlertDescription>{error}</AlertDescription>
-            </Alert>
-          )}
-
-          <Textarea
-            value={newComment}
-            onChange={(e) => {
-              setNewComment(e.target.value)
-              setError(null) // Clear error when typing
-            }}
-            placeholder="Share your thoughts... (Keep it respectful)"
-            className="mb-3 min-h-[100px] resize-none border-border bg-secondary/30"
-            maxLength={1000}
-          />
-          <div className="flex items-center justify-between">
-            <span className="text-xs text-muted-foreground">
-              {newComment.length}/1000
-            </span>
-            <Button
-              type="submit"
-              disabled={!newComment.trim() || isSubmitting}
-              className="gap-2"
-            >
-              <Send className="h-4 w-4" />
-              {isSubmitting ? 'Posting...' : 'Post Comment'}
-            </Button>
-          </div>
-        </div>
-      </form>
-
-      {/* Comments List */}
-      {isLoading ? (
-        <div className="flex justify-center py-8">
-          <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent" />
-        </div>
-      ) : comments.length === 0 ? (
-        <div className="rounded-xl border border-dashed border-border bg-secondary/20 p-8 text-center">
-          <MessageSquare className="mx-auto mb-3 h-12 w-12 text-muted-foreground" />
-          <p className="text-sm text-muted-foreground">
-            No comments yet. Be the first to share your thoughts!
-          </p>
-        </div>
-      ) : (
-        <div className="space-y-4">
-          <AnimatePresence>
-            {comments.map((comment) => (
-              <motion.div
-                key={comment.id}
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -20 }}
-                className="rounded-xl border border-border bg-card p-4"
-              >
-                <div className="mb-3 flex items-start justify-between">
-                  <div className="flex items-center gap-2">
-                    <Avatar className="h-8 w-8">
-                      <AvatarFallback className="bg-primary/10 text-sm font-bold text-primary font-mono">
-                        {getShortId(comment.deviceId).substring(0, 2).toUpperCase()}
-                      </AvatarFallback>
-                    </Avatar>
-                    <div>
-                      <p className="text-sm font-medium text-foreground font-mono">
-                        {getShortId(comment.deviceId)}
-                      </p>
-                      <p className="text-xs text-muted-foreground">
-                        {formatTimestamp(comment.timestamp)}
-                      </p>
+            {/* Input */}
+            <div className="mb-8 flex gap-4">
+                <Avatar>
+                    <AvatarImage src="/placeholder-user.jpg" />
+                    <AvatarFallback>GU</AvatarFallback>
+                </Avatar>
+                <div className="flex-1 space-y-4">
+                    <Textarea
+                        placeholder="Add a comment..."
+                        value={comment}
+                        onChange={(e) => setComment(e.target.value)}
+                        className="min-h-[100px] bg-background"
+                    />
+                    <div className="flex justify-end">
+                        <Button onClick={handleSubmit} disabled={!comment.trim()}>
+                            <Send className="mr-2 h-4 w-4" />
+                            Post Comment
+                        </Button>
                     </div>
-                  </div>
-                  {comment.deviceId === deviceId && (
-                    <Button
-                      size="sm"
-                      variant="ghost"
-                      onClick={() => handleDelete(comment.id)}
-                      className="text-red-600 hover:bg-red-50 hover:text-red-700 dark:hover:bg-red-900/10"
-                    >
-                      <Trash2 className="h-4 w-4" />
-                    </Button>
-                  )}
                 </div>
-                <p className="text-sm text-foreground whitespace-pre-wrap">
-                  {comment.content}
-                </p>
-              </motion.div>
-            ))}
-          </AnimatePresence>
+            </div>
+
+            {/* List */}
+            {!isConnected ? (
+                <div className="py-8 text-center text-muted-foreground">
+                    Scroll down to load comments...
+                </div>
+            ) : loading ? (
+                <div className="py-8 text-center text-muted-foreground">
+                    Loading comments...
+                </div>
+            ) : comments.length === 0 ? (
+                <div className="py-8 text-center text-muted-foreground">
+                    No comments yet. Be the first to comment!
+                </div>
+            ) : (
+                <div className="space-y-6">
+                    {comments.map((comment) => (
+                        <div key={comment.id} className="flex gap-4">
+                            <Avatar>
+                                <AvatarImage src={comment.avatar} />
+                                <AvatarFallback>{comment.author[0]}</AvatarFallback>
+                            </Avatar>
+                            <div>
+                                <div className="flex items-center gap-2">
+                                    <span className="font-semibold text-foreground">
+                                        {comment.author}
+                                    </span>
+                                    <span className="text-sm text-muted-foreground">
+                                        {comment.date}
+                                    </span>
+                                </div>
+                                <p className="mt-1 text-muted-foreground">{comment.content}</p>
+                            </div>
+                        </div>
+                    ))}
+                </div>
+            )}
         </div>
-      )}
-    </div>
-  )
+    )
 }

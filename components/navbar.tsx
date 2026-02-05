@@ -4,7 +4,7 @@ import Link from "next/link"
 import Image from "next/image"
 import { useState } from "react"
 import { motion, AnimatePresence } from "framer-motion"
-import { Menu, X } from "lucide-react"
+import { Menu, X, User } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { ThemeToggle } from "@/components/theme-toggle"
 
@@ -105,12 +105,14 @@ export function Navbar() {
               >
                 Blog
               </Link>
-              <Link
-                href="/submit"
-                onClick={() => setMobileMenuOpen(false)}
-                className="block rounded-lg px-3 py-2 text-sm text-primary transition-colors hover:bg-secondary"
-              >
-                Submit Tool
+              <Link href="/submit" onClick={() => setMobileMenuOpen(false)}>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="mt-2 w-full border-primary/50 text-primary hover:bg-primary/10"
+                >
+                  Submit Tool
+                </Button>
               </Link>
             </div>
           </motion.div>

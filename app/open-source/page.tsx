@@ -7,6 +7,21 @@ import { ToolCard, type Tool } from "@/components/tool-card"
 import { SearchFilter } from "@/components/search-filter"
 import { BreadcrumbSchema, ItemListSchema } from "@/components/json-ld"
 import { FAQSection } from "@/components/faq-section"
+import type { Metadata } from "next"
+
+export const metadata: Metadata = {
+  title: "Best Free Open Source Software 2024 | MIT, Apache, GPL Projects",
+  description: "Discover the best free open source software projects. Find MIT, Apache 2.0, and GPL licensed frameworks, databases, and developer tools. All free for commercial use.",
+  openGraph: {
+    title: "Best Free Open Source Software Directory | Project Free To Use",
+    description: "Curated collection of high-quality open source projects with permissive licenses. Free for personal and commercial use.",
+    type: "website",
+    url: "https://projectfreetouse.com/open-source",
+  },
+  alternates: {
+    canonical: "https://projectfreetouse.com/open-source",
+  },
+}
 
 const osCategories = [
   { id: "framework", label: "Frameworks" },

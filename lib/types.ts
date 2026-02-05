@@ -94,5 +94,6 @@ export interface Tool {
     featured?: boolean
     verified?: boolean
     sponsored?: boolean
+    pricing?: string
 }
 

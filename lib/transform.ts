@@ -46,6 +46,7 @@ export function transformAITool(aiTool: AITool): Tool {
         logoUrl: getFaviconUrl(aiTool.website),
         isFree: true,
         github: aiTool.github || undefined,
+        pricing: aiTool.pricing_note || undefined,
         featured: parseBoolean(aiTool.featured),
         verified: parseBoolean(aiTool.verified),
     }
@@ -67,6 +68,7 @@ export function transformAPI(api: API): Tool {
         logoUrl: getFaviconUrl(api.website),
         isFree: parseBoolean(api.free_tier),
         endpoint: api.docs || undefined,
+        pricing: api.pricing_note || undefined,
         featured: parseBoolean(api.featured),
         verified: parseBoolean(api.verified),
     }
