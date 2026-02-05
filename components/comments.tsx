@@ -5,9 +5,9 @@ import { Button } from "@/components/ui/button"
 import { Textarea } from "@/components/ui/textarea"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Send } from "lucide-react"
-import { database } from "@/lib/firebase"
-import { ref, push, onValue, off } from "firebase/database"
+import { supabase } from "@/lib/supabase"
 import { toast } from "sonner"
+import type { RealtimeChannel } from "@supabase/supabase-js"
 
 interface Comment {
     id: string
@@ -16,6 +16,7 @@ interface Comment {
     content: string
     timestamp: number
     date?: string
+    tool_slug: string
 }
 
 interface CommentsProps {
@@ -29,7 +30,7 @@ export function Comments({ toolSlug }: CommentsProps) {
     const [isConnected, setIsConnected] = useState(false)
     const [userIdentity, setUserIdentity] = useState("Guest User")
     const containerRef = useRef<HTMLDivElement>(null)
-    const commentsRef = useRef(database ? ref(database, `comments/${toolSlug}`) : null)
+    const channelRef = useRef<RealtimeChannel | null>(null)
 
     // Initialize user identity from localStorage
     useEffect(() => {
@@ -45,108 +46,106 @@ export function Comments({ toolSlug }: CommentsProps) {
         }
     }, [])
 
-    // Lazy load comments only when section becomes visible
+    // Load comments immediately on mount
     useEffect(() => {
-        if (!commentsRef.current) return
-
-        const observer = new IntersectionObserver(
-            (entries) => {
-                entries.forEach((entry) => {
-                    if (entry.isIntersecting && !isConnected) {
-                        // User scrolled to comments section - connect to Firebase
-                        connectToFirebase()
-                    } else if (!entry.isIntersecting && isConnected) {
-                        // User scrolled away - disconnect to save connections
-                        disconnectFromFirebase()
-                    }
-                })
-            },
-            { threshold: 0.1, rootMargin: "50px" }
-        )
-
-        if (containerRef.current) {
-            observer.observe(containerRef.current)
-        }
+        connectToSupabase()
 
         return () => {
-            observer.disconnect()
-            disconnectFromFirebase()
+            disconnectFromSupabase()
         }
-    }, [isConnected])
+    }, [toolSlug])
 
-    const connectToFirebase = () => {
-        const dbRef = commentsRef.current
-        if (!dbRef) {
-            console.warn("Firebase not configured, skipping connection")
-            return
-        }
-
+    const connectToSupabase = async () => {
         setLoading(true)
         setIsConnected(true)
 
-        onValue(
-            dbRef,
-            (snapshot) => {
-                if (snapshot.exists()) {
-                    const data = snapshot.val()
-                    const commentsArray: Comment[] = Object.entries(data).map(
-                        ([id, value]: [string, any]) => ({
-                            id,
-                            author: value.author || "Guest User",
-                            content: value.content,
-                            timestamp: value.timestamp,
-                            date: formatDate(value.timestamp),
-                            avatar: value.avatar || "/placeholder-user.jpg",
-                        })
-                    )
+        try {
+            // 1. Fetch existing comments
+            const { data, error } = await supabase
+                .from('comments')
+                .select('*')
+                .eq('tool_slug', toolSlug)
+                .order('created_at', { ascending: false })
 
-                    // Sort by newest first
-                    commentsArray.sort((a, b) => b.timestamp - a.timestamp)
-                    setComments(commentsArray)
-                } else {
-                    setComments([])
-                }
-                setLoading(false)
-            },
-            (error) => {
-                console.error("Error fetching comments:", error)
-                toast.error("Failed to load comments")
-                setLoading(false)
+            if (error) throw error
+
+            const loadedComments = (data || []).map(transformSupabaseComment)
+            setComments(loadedComments)
+
+            // 2. Subscribe to new comments
+            // Only subscribe if not already subscribed
+            if (!channelRef.current) {
+                const channel = supabase
+                    .channel(`comments-${toolSlug}`)
+                    .on(
+                        'postgres_changes',
+                        {
+                            event: 'INSERT',
+                            schema: 'public',
+                            table: 'comments',
+                            filter: `tool_slug=eq.${toolSlug}`
+                        },
+                        (payload) => {
+                            const newComment = transformSupabaseComment(payload.new)
+                            setComments((prev) => [newComment, ...prev])
+                        }
+                    )
+                    .subscribe()
+
+                channelRef.current = channel
             }
-        )
+
+        } catch (error) {
+            console.error("Error loading comments:", error)
+            toast.error("Failed to load comments")
+        } finally {
+            setLoading(false)
+        }
     }
 
-    const disconnectFromFirebase = () => {
-        const dbRef = commentsRef.current
-        if (isConnected && dbRef) {
-            off(dbRef)
-            setIsConnected(false)
+    const disconnectFromSupabase = () => {
+        if (channelRef.current) {
+            supabase.removeChannel(channelRef.current)
+            channelRef.current = null
+        }
+        setIsConnected(false)
+    }
+
+    const transformSupabaseComment = (record: any): Comment => {
+        const timestamp = new Date(record.created_at).getTime()
+        return {
+            id: record.id.toString(),
+            author: record.author,
+            content: record.content,
+            avatar: record.avatar || "/placeholder-user.jpg",
+            timestamp: timestamp,
+            date: formatDate(timestamp),
+            tool_slug: record.tool_slug
         }
     }
 
     const handleSubmit = async () => {
         if (!comment.trim()) return
 
-        const dbRef = commentsRef.current
-
-        // Check if database is configured
-        if (!dbRef) {
-            toast.error("Comments are currently disabled (database not configured)")
-            return
-        }
-
-        // Ensure we're connected before posting
+        // Ensure we're connected
         if (!isConnected) {
-            connectToFirebase()
+            connectToSupabase()
         }
 
         try {
-            await push(dbRef, {
-                author: userIdentity,
-                content: comment,
-                timestamp: Date.now(),
-                avatar: "/placeholder-user.jpg",
-            })
+            const { error } = await supabase
+                .from('comments')
+                .insert([
+                    {
+                        tool_slug: toolSlug,
+                        author: userIdentity,
+                        content: comment,
+                        avatar: "/placeholder-user.jpg",
+                        // created_at is automatic
+                    }
+                ])
+
+            if (error) throw error
 
             setComment("")
             toast.success("Comment posted!")
@@ -201,11 +200,7 @@ export function Comments({ toolSlug }: CommentsProps) {
             </div>
 
             {/* List */}
-            {!isConnected ? (
-                <div className="py-8 text-center text-muted-foreground">
-                    Scroll down to load comments...
-                </div>
-            ) : loading ? (
+            {loading && comments.length === 0 ? (
                 <div className="py-8 text-center text-muted-foreground">
                     Loading comments...
                 </div>
