@@ -55,7 +55,9 @@ export function HomeView({ initialTools }: HomeViewProps) {
         ? initialTools.filter(
             (tool: Tool) =>
                 tool.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                tool.description.toLowerCase().includes(searchQuery.toLowerCase())
+                tool.description.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                tool.category.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                tool.tags.some(tag => tag.toLowerCase().includes(searchQuery.toLowerCase()))
         )
         : trendingTools
 
