@@ -3,7 +3,8 @@
 import { useState, useMemo } from "react"
 import { Brain, Sparkles, ImageIcon, Video, Code, BookOpen, Briefcase } from "lucide-react"
 import { motion } from "framer-motion"
-import { ToolCard, type Tool } from "@/components/tool-card"
+import { ToolCard } from "@/components/tool-card"
+import type { Tool } from "@/lib/types"
 import { SearchFilter } from "@/components/search-filter"
 import { FAQSection } from "@/components/faq-section"
 

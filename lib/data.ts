@@ -1,4 +1,4 @@
-import { Tool } from "@/components/tool-card"
+import { Tool } from "@/lib/types"
 import { getSheetData } from './sheets'
 import type { AITool, API, OpenSoftware, OpenPattern, LLMModel } from './types'
 import {

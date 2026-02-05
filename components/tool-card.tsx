@@ -6,26 +6,7 @@ import { ExternalLink, Star, Github, Copy, Check } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { useState } from "react"
-
-export interface Tool {
-  id: string
-  slug: string
-  name: string
-  description: string
-  category: string
-  type: "app" | "api" | "open-source" | "patent"
-  tags: string[]
-  url: string
-  logoUrl?: string
-  isFree: boolean
-  stars?: number
-  license?: string
-  endpoint?: string
-  github?: string
-  featured?: boolean
-  verified?: boolean
-  sponsored?: boolean
-}
+import type { Tool } from "@/lib/types"
 
 
 interface ToolCardProps {

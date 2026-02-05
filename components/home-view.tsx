@@ -7,7 +7,8 @@ import { Search, Sparkles, Code, GitBranch, Lightbulb, ArrowRight, Brain } from 
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Badge } from "@/components/ui/badge"
-import { ToolCard, type Tool } from "@/components/tool-card"
+import { ToolCard } from "@/components/tool-card"
+import type { Tool } from "@/lib/types"
 import { FAQSection } from "@/components/faq-section"
 
 const categoryChips = [
