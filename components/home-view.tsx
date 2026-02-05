@@ -2,6 +2,7 @@
 
 import { useState } from "react"
 import Link from "next/link"
+import { useRouter } from "next/navigation"
 import { motion } from "framer-motion"
 import { Search, Sparkles, Code, GitBranch, Lightbulb, ArrowRight, Brain } from "lucide-react"
 import { Button } from "@/components/ui/button"
@@ -49,17 +50,25 @@ interface HomeViewProps {
 export function HomeView({ initialTools }: HomeViewProps) {
     const [searchQuery, setSearchQuery] = useState("")
 
+    const router = useRouter()
+
     const trendingTools = initialTools.slice(0, 8)
 
     const filteredTools = searchQuery
-        ? initialTools.filter(
-            (tool: Tool) =>
-                tool.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                tool.description.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                tool.category.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                tool.tags.some(tag => tag.toLowerCase().includes(searchQuery.toLowerCase()))
-        )
+        ? initialTools.filter((tool: Tool) => {
+            const searchTerms = searchQuery.toLowerCase().trim().split(/\s+/)
+            const searchableText = `${tool.name} ${tool.category} ${tool.tags.join(" ")}`.toLowerCase()
+
+            // AND logic: Every term must match at least one field (contained in the aggregate text)
+            return searchTerms.every(term => searchableText.includes(term))
+        })
         : trendingTools
+
+    const handleSearch = (e: React.KeyboardEvent<HTMLInputElement>) => {
+        if (e.key === 'Enter' && searchQuery.trim()) {
+            router.push(`/search?q=${encodeURIComponent(searchQuery.trim())}`)
+        }
+    }
 
     return (
         <div className="pt-16">
@@ -120,8 +129,43 @@ export function HomeView({ initialTools }: HomeViewProps) {
                                     placeholder="Search free tools, APIs, open source..."
                                     value={searchQuery}
                                     onChange={(e) => setSearchQuery(e.target.value)}
+                                    onKeyDown={handleSearch}
                                     className="h-14 rounded-2xl border-border bg-card pl-12 pr-4 text-foreground shadow-lg shadow-black/5 transition-shadow focus:shadow-xl focus:shadow-primary/5"
                                 />
+
+                                {/* Search Dropdown */}
+                                {searchQuery && (
+                                    <div className="absolute left-0 right-0 top-full z-50 mt-2 overflow-hidden rounded-2xl border border-border bg-card shadow-2xl animate-in fade-in slide-in-from-top-2">
+                                        <div className="max-h-[400px] overflow-y-auto p-2">
+                                            {filteredTools.length > 0 ? (
+                                                filteredTools.map((tool) => (
+                                                    <Link
+                                                        key={tool.id}
+                                                        href={`/tool/${tool.slug}`}
+                                                        className="flex items-center gap-4 rounded-xl p-3 hover:bg-muted/50 transition-colors"
+                                                    >
+                                                        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary">
+                                                            {tool.type === 'api' && <Code className="h-5 w-5" />}
+                                                            {tool.type === 'app' && <Brain className="h-5 w-5" />}
+                                                            {tool.type === 'open-source' && <GitBranch className="h-5 w-5" />}
+                                                            {tool.type === 'patent' && <Lightbulb className="h-5 w-5" />}
+                                                        </div>
+                                                        <div className="text-left">
+                                                            <h4 className="font-semibold text-foreground">{tool.name}</h4>
+                                                            <p className="line-clamp-1 text-sm text-muted-foreground">
+                                                                {tool.description}
+                                                            </p>
+                                                        </div>
+                                                    </Link>
+                                                ))
+                                            ) : (
+                                                <div className="p-4 text-center text-muted-foreground">
+                                                    No results found for "{searchQuery}"
+                                                </div>
+                                            )}
+                                        </div>
+                                    </div>
+                                )}
                             </div>
                         </motion.div>
 
@@ -179,42 +223,25 @@ export function HomeView({ initialTools }: HomeViewProps) {
                     <div className="mb-12 flex items-center justify-between">
                         <div>
                             <h2 className="text-2xl font-bold text-foreground lg:text-3xl">
-                                {searchQuery ? "Search Results" : "Trending Tools"}
+                                Trending Tools
                             </h2>
                             <p className="mt-2 text-muted-foreground">
-                                {searchQuery
-                                    ? `Found ${filteredTools.length} results for "${searchQuery}"`
-                                    : "Discover the most popular free resources"}
+                                Discover the most popular free resources
                             </p>
                         </div>
-                        {!searchQuery && (
-                            <Link href="/ai-tools">
-                                <Button variant="ghost" className="text-primary hover:bg-primary/10">
-                                    View All
-                                    <ArrowRight className="ml-2 h-4 w-4" />
-                                </Button>
-                            </Link>
-                        )}
+                        <Link href="/ai-tools">
+                            <Button variant="ghost" className="text-primary hover:bg-primary/10">
+                                View All
+                                <ArrowRight className="ml-2 h-4 w-4" />
+                            </Button>
+                        </Link>
                     </div>
 
                     <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-                        {filteredTools.map((tool, index) => (
+                        {trendingTools.map((tool, index) => (
                             <ToolCard key={tool.id} tool={tool} index={index} />
                         ))}
                     </div>
-
-                    {filteredTools.length === 0 && (
-                        <div className="py-16 text-center">
-                            <p className="text-lg text-muted-foreground">No tools found matching your search.</p>
-                            <Button
-                                variant="ghost"
-                                className="mt-4 text-primary"
-                                onClick={() => setSearchQuery("")}
-                            >
-                                Clear search
-                            </Button>
-                        </div>
-                    )}
                 </div>
             </section>
 
