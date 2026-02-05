@@ -9,6 +9,7 @@ import {
 import { Badge } from "@/components/ui/badge"
 import { ToolCard } from "@/components/tool-card"
 import { ToolActions } from "@/components/tool-actions"
+import { ScreenshotPreview } from "@/components/screenshot-preview"
 import { SoftwareApplicationSchema, BreadcrumbSchema } from "@/components/json-ld"
 import { getAllTools, getRelatedTools } from "@/lib/data"
 import { slugify } from "@/lib/transform"
@@ -192,20 +193,7 @@ export default async function ToolPage({ params }: ToolPageProps) {
             <section>
               <h2 className="mb-6 text-2xl font-bold text-foreground">Preview</h2>
               <div className="aspect-video overflow-hidden rounded-2xl border border-border bg-muted/30 relative group">
-                <img
-                  src={`https://image.thum.io/get/width/1200/crop/800/noanimate/${tool.url}`}
-                  alt={`${tool.name} preview`}
-                  className="w-full h-full object-cover transition-transform duration-500 hover:scale-105"
-                  loading="lazy"
-                  onError={(e) => {
-                    e.currentTarget.style.display = 'none';
-                    e.currentTarget.parentElement?.classList.add('flex', 'items-center', 'justify-center');
-                    const p = document.createElement('p');
-                    p.className = 'text-muted-foreground';
-                    p.innerText = 'Preview not available';
-                    e.currentTarget.parentElement?.appendChild(p);
-                  }}
-                />
+                <ScreenshotPreview url={tool.url} name={tool.name} />
               </div>
             </section>
 
