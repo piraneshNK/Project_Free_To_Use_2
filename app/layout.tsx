@@ -25,13 +25,13 @@ export default function RootLayout({
         <html lang="en" suppressHydrationWarning>
             <body className={outfit.className}>
                 <Script
-                    src="https://www.googletagmanager.com/gtag/js?id=G-RKB7R57LZQ"
-                    strategy="afterInteractive"
-                />
-                <Script
                     async
                     src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-5393537893752961"
                     crossOrigin="anonymous"
+                    strategy="afterInteractive"
+                />
+                <Script
+                    src="https://www.googletagmanager.com/gtag/js?id=G-RKB7R57LZQ"
                     strategy="afterInteractive"
                 />
                 <Script id="google-analytics" strategy="afterInteractive">
