@@ -13,6 +13,9 @@ export const metadata: Metadata = {
     description: "Discover the best free AI tools, APIs, open source software, and patterns. A curated directory for developers and creators.",
     verification: {
         google: "hlRBJ-UptLUAi0_Qamw24aukNFkWK5Iu3qdu6bXxHg8",
+        other: {
+            "google-adsense-account": "ca-pub-5393537893752961",
+        },
     },
 }
 
