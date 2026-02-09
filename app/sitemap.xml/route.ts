@@ -19,6 +19,7 @@ export async function GET() {
             '/open-source',
             '/open-patents',
             '/llm-models',
+            '/ai-overlap-burn-calculator',
             '/about',
             '/blog',
             '/submit',
