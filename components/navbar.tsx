@@ -4,17 +4,28 @@ import Link from "next/link"
 import Image from "next/image"
 import { useState } from "react"
 import { motion, AnimatePresence } from "framer-motion"
-import { Menu, X, User } from "lucide-react"
+import { Menu, X, ChevronDown } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { ThemeToggle } from "@/components/theme-toggle"
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu"
 
 const navLinks = [
   { href: "/", label: "Home" },
   { href: "/ai-tools", label: "AI Tools" },
   { href: "/apis", label: "APIs" },
-  { href: "/open-source", label: "Open Source" },
   { href: "/open-patents", label: "Open Patents" },
   { href: "/llm-models", label: "LLM Models" },
+  {
+    label: "Free Tools",
+    children: [
+      { label: "AI Overlap & Burn Calculator", href: "/ai-overlap-burn-calculator" }
+    ]
+  },
   { href: "/about", label: "About" },
 ]
 
@@ -39,13 +50,31 @@ export function Navbar() {
         {/* Desktop Navigation */}
         <div className="hidden items-center gap-1 lg:flex">
           {navLinks.map((link) => (
-            <Link
-              key={link.href}
-              href={link.href}
-              className="rounded-lg px-3 py-2 text-sm text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground"
-            >
-              {link.label}
-            </Link>
+            link.children ? (
+              <DropdownMenu key={link.label}>
+                <DropdownMenuTrigger className="flex items-center gap-1 rounded-lg px-3 py-2 text-sm text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground outline-none">
+                  {link.label}
+                  <ChevronDown className="h-4 w-4" />
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="start">
+                  {link.children.map((child) => (
+                    <DropdownMenuItem key={child.href} asChild>
+                      <Link href={child.href} className="w-full cursor-pointer">
+                        {child.label}
+                      </Link>
+                    </DropdownMenuItem>
+                  ))}
+                </DropdownMenuContent>
+              </DropdownMenu>
+            ) : (
+              <Link
+                key={link.href}
+                href={link.href!}
+                className="rounded-lg px-3 py-2 text-sm text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground"
+              >
+                {link.label}
+              </Link>
+            )
           ))}
           <Link
             href="/blog"
@@ -89,14 +118,32 @@ export function Navbar() {
           >
             <div className="space-y-1 px-4 py-4">
               {navLinks.map((link) => (
-                <Link
-                  key={link.href}
-                  href={link.href}
-                  onClick={() => setMobileMenuOpen(false)}
-                  className="block rounded-lg px-3 py-2 text-sm text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground"
-                >
-                  {link.label}
-                </Link>
+                link.children ? (
+                  <div key={link.label} className="space-y-1">
+                    <div className="px-3 py-2 text-sm font-medium text-foreground">
+                      {link.label}
+                    </div>
+                    {link.children.map((child) => (
+                      <Link
+                        key={child.href}
+                        href={child.href}
+                        onClick={() => setMobileMenuOpen(false)}
+                        className="block rounded-lg px-3 py-2 pl-6 text-sm text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground"
+                      >
+                        {child.label}
+                      </Link>
+                    ))}
+                  </div>
+                ) : (
+                  <Link
+                    key={link.href}
+                    href={link.href!}
+                    onClick={() => setMobileMenuOpen(false)}
+                    className="block rounded-lg px-3 py-2 text-sm text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground"
+                  >
+                    {link.label}
+                  </Link>
+                )
               ))}
               <Link
                 href="/blog"
