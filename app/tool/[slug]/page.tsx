@@ -92,11 +92,11 @@ export default async function ToolPage({ params }: ToolPageProps) {
       <div className="relative overflow-hidden border-b border-border/40 bg-card/30 pb-12 pt-8">
         <div className="mx-auto max-w-7xl px-4 lg:px-8">
           <Link
-            href="/"
+            href="/ai-tools"
             className="mb-8 inline-flex items-center text-sm text-muted-foreground hover:text-primary transition-colors"
           >
             <ArrowLeft className="mr-2 h-4 w-4" />
-            Back to Tools
+            Back to AI Tools
           </Link>
 
           <div className="grid gap-8 lg:grid-cols-3 lg:gap-12">

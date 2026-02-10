@@ -77,7 +77,7 @@ export default function CalculatorPage() {
     }
 
     return (
-        <div className="min-h-screen bg-background text-foreground pb-20">
+        <div className="min-h-screen bg-background text-foreground pb-20 pt-24">
             <Script
                 id="calculator-schema"
                 type="application/ld+json"
@@ -85,30 +85,29 @@ export default function CalculatorPage() {
             />
 
             <div className="container mx-auto px-4 py-12 max-w-7xl">
-                <header className="relative mb-16 space-y-4 text-center">
-                    <div className="absolute left-0 top-0 flex flex-col items-start gap-4 z-10">
-                        <Link
-                            href="/"
-                            className="inline-flex items-center text-sm text-muted-foreground hover:text-primary transition-colors"
-                        >
-                            <ArrowLeft className="mr-2 h-4 w-4" />
-                            Back to Tools
-                        </Link>
-                        <CurrencySelector
-                            currentCurrency={currency}
-                            onCurrencyChange={setCurrency}
-                            isAuto={isAuto}
-                            onAutoToggle={setIsAuto}
-                        />
-                    </div>
-                    <div className="pt-8">
-                        <h1 className="text-4xl md:text-6xl font-bold tracking-tighter bg-clip-text text-transparent bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500">
-                            AI Overlap & Burn Calculator
-                        </h1>
-                        <p className="text-xl text-muted-foreground max-w-2xl mx-auto mt-4">
-                            Compare 50+ top AI tools, visualize capabilities, and optimize your monthly subscription costs.
-                        </p>
-                    </div>
+                <div className="mb-8 flex flex-col items-start gap-4">
+                    <Link
+                        href="/free-tools"
+                        className="inline-flex items-center text-sm font-medium text-muted-foreground hover:text-primary transition-colors"
+                    >
+                        <ArrowLeft className="mr-2 h-4 w-4" />
+                        Back to Free Tools
+                    </Link>
+                    <CurrencySelector
+                        currentCurrency={currency}
+                        onCurrencyChange={setCurrency}
+                        isAuto={isAuto}
+                        onAutoToggle={setIsAuto}
+                    />
+                </div>
+
+                <header className="mb-16 space-y-4 text-center">
+                    <h1 className="text-4xl md:text-6xl font-bold tracking-tighter bg-clip-text text-transparent bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500">
+                        AI Overlap & Burn Calculator
+                    </h1>
+                    <p className="text-xl text-muted-foreground max-w-2xl mx-auto mt-4">
+                        Compare 50+ top AI tools, visualize capabilities, and optimize your monthly subscription costs.
+                    </p>
                 </header>
 
                 <div className="grid grid-cols-1 lg:grid-cols-12 gap-12">

@@ -20,12 +20,8 @@ const navLinks = [
   { href: "/apis", label: "APIs" },
   { href: "/open-patents", label: "Open Patents" },
   { href: "/llm-models", label: "LLM Models" },
-  {
-    label: "Free Tools",
-    children: [
-      { label: "AI Overlap & Burn Calculator", href: "/ai-overlap-burn-calculator" }
-    ]
-  },
+  { href: "/llm-models", label: "LLM Models" },
+  { href: "/free-tools", label: "Free Tools" },
   { href: "/about", label: "About" },
 ]
 

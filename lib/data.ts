@@ -37,6 +37,35 @@ export async function getAllTools(): Promise<Tool[]> {
       ...openSoftware.map(transformOpenSoftware),
       ...openPatterns.map(transformOpenPattern),
       ...llmModels.map(transformLLMModel),
+      // Local Tools Injection
+      {
+        id: "ai-overlap-burn-calculator",
+        name: "AI Overlap & Burn Calculator",
+        description: "Calculate your AI subscription costs and find redundant tools in your stack.",
+        url: "/ai-overlap-burn-calculator",
+        slug: "ai-overlap-burn-calculator",
+        category: "Productivity AI",
+        type: "app",
+        tags: ["finance", "subscription", "calculator", "cost"],
+        pricing: "Free",
+        featured: true,
+        verified: true,
+        isFree: true
+      },
+      {
+        id: "age-calculator",
+        name: "Age Calculator",
+        description: "Calculate your exact age in years, months, and days with next birthday countdown.",
+        url: "/age-calculator",
+        slug: "age-calculator",
+        category: "Productivity AI",
+        type: "app",
+        tags: ["calculator", "age", "utility", "date"],
+        pricing: "Free",
+        featured: true,
+        verified: true,
+        isFree: true
+      }
     ]
 
     cachedTools = tools
