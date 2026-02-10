@@ -65,6 +65,20 @@ export async function getAllTools(): Promise<Tool[]> {
         featured: true,
         verified: true,
         isFree: true
+      },
+      {
+        id: "percentage-calculator",
+        name: "Percentage Calculator",
+        description: "All-in-one percentage calculator with 5 calculation modes. Calculate percentages, differences, and changes instantly.",
+        url: "/percentage-calculator",
+        slug: "percentage-calculator",
+        category: "Productivity AI",
+        type: "app",
+        tags: ["calculator", "percentage", "math", "utility"],
+        pricing: "Free",
+        featured: true,
+        verified: true,
+        isFree: true
       }
     ]
 
