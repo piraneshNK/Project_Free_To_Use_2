@@ -10,6 +10,18 @@ export const metadata = {
 
 const blogPosts = [
   {
+    id: "0",
+    slug: "chatgpt-is-down-free-alternatives",
+    title: "ChatGPT is Down? Don't Panic—Access These Professional Free AI Tools Right Now",
+    excerpt:
+      "ChatGPT outage on February 13, 2026? Your deadlines don't wait. Discover the best free AI alternatives including Claude, Gemini, and Copilot that are working right now.",
+    category: "AI Tools",
+    author: "Alex Chen",
+    date: "Feb 13, 2026",
+    readTime: "12 min read",
+    featured: true,
+  },
+  {
     id: "1",
     slug: "stop-wasting-money-saas-free-alternatives",
     title: "How to Stop Wasting Money on SaaS Subscriptions: The Ultimate Guide to Free Alternatives",
