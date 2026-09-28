@@ -7,6 +7,9 @@ import { ToolCard } from "@/components/tool-card"
 import type { Tool } from "@/lib/types"
 import { SearchFilter } from "@/components/search-filter"
 import { FAQSection } from "@/components/faq-section"
+import { useDirectoryTools } from "@/hooks/use-directory-tools"
+
+const INITIAL_VISIBLE = 60
 
 const aiCategories = [
     { id: "writing", label: "Writing AI", icon: Sparkles },
@@ -47,9 +50,11 @@ interface AiToolsViewProps {
 export function AiToolsView({ initialTools }: AiToolsViewProps) {
     const [searchQuery, setSearchQuery] = useState("")
     const [selectedCategory, setSelectedCategory] = useState<string | null>(null)
+    const [visibleCount, setVisibleCount] = useState(INITIAL_VISIBLE)
+    const { tools, loading } = useDirectoryTools("app", initialTools)
 
     const filteredApps = useMemo(() => {
-        return initialTools.filter((app) => {
+        return tools.filter((app) => {
             const matchesSearch =
                 searchQuery === "" ||
                 app.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -63,7 +68,7 @@ export function AiToolsView({ initialTools }: AiToolsViewProps) {
 
             return matchesSearch && matchesCategory
         })
-    }, [initialTools, searchQuery, selectedCategory])
+    }, [tools, searchQuery, selectedCategory])
 
     return (
         <div className="mx-auto max-w-7xl px-4 py-12 lg:px-8 lg:py-16">
@@ -122,26 +127,35 @@ export function AiToolsView({ initialTools }: AiToolsViewProps) {
             <SearchFilter
                 placeholder="Search free AI tools..."
                 categories={aiCategories.map(c => ({ id: c.id, label: c.label }))}
-                onSearch={setSearchQuery}
-                onFilterChange={setSelectedCategory}
+                onSearch={(value) => { setSearchQuery(value); setVisibleCount(INITIAL_VISIBLE) }}
+                onFilterChange={(value) => { setSelectedCategory(value); setVisibleCount(INITIAL_VISIBLE) }}
                 selectedCategory={selectedCategory}
             />
 
             {/* Results Count */}
             <p className="mb-6 text-sm text-muted-foreground">
-                Showing {filteredApps.length} free AI {filteredApps.length === 1 ? "tool" : "tools"}
+                Showing {Math.min(visibleCount, filteredApps.length)} of {filteredApps.length} free AI {filteredApps.length === 1 ? "tool" : "tools"}
+                {loading && " loaded so far"}
                 {searchQuery && ` for "${searchQuery}"`}
                 {selectedCategory && ` in ${aiCategories.find((c) => c.id === selectedCategory)?.label}`}
             </p>
 
             {/* Tools Grid */}
             <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-                {filteredApps.map((app, index) => (
+                {filteredApps.slice(0, visibleCount).map((app, index) => (
                     <ToolCard key={app.id} tool={app} index={index} />
                 ))}
             </div>
 
-            {filteredApps.length === 0 && (
+            {filteredApps.length > visibleCount && (
+                <button className="mt-8 rounded-md border border-border px-5 py-2 text-sm font-medium hover:bg-muted" onClick={() => setVisibleCount((count) => count + INITIAL_VISIBLE)}>
+                    Show {Math.min(INITIAL_VISIBLE, filteredApps.length - visibleCount)} more AI tools
+                </button>
+            )}
+
+            {loading && <p className="mt-6 text-center text-sm text-muted-foreground">Loading remaining AI tools...</p>}
+
+            {filteredApps.length === 0 && !loading && (
                 <div className="py-16 text-center">
                     <p className="text-lg text-muted-foreground">No AI tools found matching your criteria.</p>
                     <button

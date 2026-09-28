@@ -1,13 +1,15 @@
 "use client"
 
-import { useState, useMemo, useEffect } from "react"
+import { useState, useMemo } from "react"
 import { motion } from "framer-motion"
 import { Brain, Sparkles } from "lucide-react"
 import { ToolCard } from "@/components/tool-card"
-import type { Tool } from "@/lib/types"
 import { SearchFilter } from "@/components/search-filter"
 import { BreadcrumbSchema, ItemListSchema } from "@/components/json-ld"
 import { FAQSection } from "@/components/faq-section"
+import { useDirectoryTools } from "@/hooks/use-directory-tools"
+
+const INITIAL_VISIBLE = 60
 
 const llmCategories = [
   { id: "text", label: "Text Generation" },
@@ -42,30 +44,8 @@ const llmFaqs = [
 export default function LLMModelsPage() {
   const [searchQuery, setSearchQuery] = useState("")
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null)
-  const [models, setModels] = useState<Tool[]>([])
-  const [loading, setLoading] = useState(true)
-
-  useEffect(() => {
-    fetch('/api/tools')
-      .then(res => res.json())
-      .then((tools: Tool[]) => {
-        // Filter for LLM models - they're stored as 'app' type with specific tags
-        const llmModels = tools.filter(t =>
-          t.tags.some(tag =>
-            tag.toLowerCase().includes('llm') ||
-            tag.toLowerCase().includes('language model') ||
-            tag.toLowerCase().includes('embedding') ||
-            tag.toLowerCase().includes('text generation')
-          )
-        )
-        setModels(llmModels)
-        setLoading(false)
-      })
-      .catch(err => {
-        console.error('Error loading LLM models:', err)
-        setLoading(false)
-      })
-  }, [])
+  const [visibleCount, setVisibleCount] = useState(INITIAL_VISIBLE)
+  const { tools: models, loading } = useDirectoryTools("llm")
 
   const filteredModels = useMemo(() => {
     return models.filter((model) => {
@@ -156,14 +136,15 @@ export default function LLMModelsPage() {
         <SearchFilter
           placeholder="Search LLM models..."
           categories={llmCategories}
-          onSearch={setSearchQuery}
-          onFilterChange={setSelectedCategory}
+          onSearch={(value) => { setSearchQuery(value); setVisibleCount(INITIAL_VISIBLE) }}
+          onFilterChange={(value) => { setSelectedCategory(value); setVisibleCount(INITIAL_VISIBLE) }}
           selectedCategory={selectedCategory}
         />
 
         {/* Results Count */}
         <p className="mb-6 text-sm text-muted-foreground">
-          Showing {filteredModels.length} {filteredModels.length === 1 ? "model" : "models"}
+          Showing {Math.min(visibleCount, filteredModels.length)} of {filteredModels.length} {filteredModels.length === 1 ? "model" : "models"}
+          {loading && " loaded so far"}
           {searchQuery && ` for "${searchQuery}"`}
           {selectedCategory && ` in ${llmCategories.find((c) => c.id === selectedCategory)?.label}`}
         </p>
@@ -175,11 +156,19 @@ export default function LLMModelsPage() {
           </div>
         ) : (
           <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-            {filteredModels.map((model, index) => (
+            {filteredModels.slice(0, visibleCount).map((model, index) => (
               <ToolCard key={model.id} tool={model} index={index} />
             ))}
           </div>
         )}
+
+        {filteredModels.length > visibleCount && (
+          <button className="mt-8 rounded-md border border-border px-5 py-2 text-sm font-medium hover:bg-muted" onClick={() => setVisibleCount((count) => count + INITIAL_VISIBLE)}>
+            Show {Math.min(INITIAL_VISIBLE, filteredModels.length - visibleCount)} more models
+          </button>
+        )}
+
+        {loading && <p className="mt-6 text-center text-sm text-muted-foreground">Loading remaining models...</p>}
 
         {filteredModels.length === 0 && !loading && (
           <div className="py-16 text-center">

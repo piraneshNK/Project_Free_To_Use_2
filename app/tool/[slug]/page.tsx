@@ -14,6 +14,8 @@ import { SoftwareApplicationSchema, BreadcrumbSchema } from "@/components/json-l
 import { getAllTools, getRelatedTools } from "@/lib/data"
 import { slugify } from "@/lib/transform"
 
+export const revalidate = 300
+
 interface ToolPageProps {
   params: Promise<{ slug: string }>
 }
@@ -55,9 +57,12 @@ export async function generateMetadata({ params }: ToolPageProps): Promise<Metad
 
 export async function generateStaticParams() {
   const tools = await getAllTools()
-  return tools.map((tool) => ({
+  return tools
+    .filter((tool) => tool.featured)
+    .slice(0, 100)
+    .map((tool) => ({
     slug: tool.slug || slugify(tool.name),
-  }))
+    }))
 }
 
 export default async function ToolPage({ params }: ToolPageProps) {

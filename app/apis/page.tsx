@@ -1,13 +1,15 @@
 "use client"
 
-import { useState, useMemo, useEffect } from "react"
+import { useState, useMemo } from "react"
 import { motion } from "framer-motion"
 import { Code } from "lucide-react"
 import { ToolCard } from "@/components/tool-card"
-import type { Tool } from "@/lib/types"
 import { SearchFilter } from "@/components/search-filter"
 import { BreadcrumbSchema, ItemListSchema } from "@/components/json-ld"
 import { FAQSection } from "@/components/faq-section"
+import { useDirectoryTools } from "@/hooks/use-directory-tools"
+
+const INITIAL_VISIBLE = 60
 
 const apiCategories = [
   { id: "ai", label: "AI APIs" },
@@ -42,22 +44,8 @@ const apiFaqs = [
 export default function APIsPage() {
   const [searchQuery, setSearchQuery] = useState("")
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null)
-  const [apis, setApis] = useState<Tool[]>([])
-  const [loading, setLoading] = useState(true)
-
-  useEffect(() => {
-    fetch('/api/tools')
-      .then(res => res.json())
-      .then((tools: Tool[]) => {
-        const apiTools = tools.filter(t => t.type === 'api')
-        setApis(apiTools)
-        setLoading(false)
-      })
-      .catch(err => {
-        console.error('Error loading APIs:', err)
-        setLoading(false)
-      })
-  }, [])
+  const [visibleCount, setVisibleCount] = useState(INITIAL_VISIBLE)
+  const { tools: apis, loading } = useDirectoryTools("api")
 
   const filteredAPIs = useMemo(() => {
     return apis.filter((api) => {
@@ -152,26 +140,35 @@ export default function APIsPage() {
         <SearchFilter
           placeholder="Search free APIs..."
           categories={apiCategories}
-          onSearch={setSearchQuery}
-          onFilterChange={setSelectedCategory}
+          onSearch={(value) => { setSearchQuery(value); setVisibleCount(INITIAL_VISIBLE) }}
+          onFilterChange={(value) => { setSelectedCategory(value); setVisibleCount(INITIAL_VISIBLE) }}
           selectedCategory={selectedCategory}
         />
 
         {/* Results Count */}
         <p className="mb-6 text-sm text-muted-foreground">
-          Showing {filteredAPIs.length} {filteredAPIs.length === 1 ? "API" : "APIs"}
+          Showing {Math.min(visibleCount, filteredAPIs.length)} of {filteredAPIs.length} {filteredAPIs.length === 1 ? "API" : "APIs"}
+          {loading && " loaded so far"}
           {searchQuery && ` for "${searchQuery}"`}
           {selectedCategory && ` in ${apiCategories.find((c) => c.id === selectedCategory)?.label}`}
         </p>
 
         {/* APIs Grid */}
         <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-          {filteredAPIs.map((api, index) => (
+          {filteredAPIs.slice(0, visibleCount).map((api, index) => (
             <ToolCard key={api.id} tool={api} index={index} />
           ))}
         </div>
 
-        {filteredAPIs.length === 0 && (
+        {filteredAPIs.length > visibleCount && (
+          <button className="mt-8 rounded-md border border-border px-5 py-2 text-sm font-medium hover:bg-muted" onClick={() => setVisibleCount((count) => count + INITIAL_VISIBLE)}>
+            Show {Math.min(INITIAL_VISIBLE, filteredAPIs.length - visibleCount)} more APIs
+          </button>
+        )}
+
+        {loading && <p className="mt-6 text-center text-sm text-muted-foreground">Loading remaining APIs...</p>}
+
+        {filteredAPIs.length === 0 && !loading && (
           <div className="py-16 text-center">
             <p className="text-lg text-muted-foreground">No APIs found matching your criteria.</p>
             <button

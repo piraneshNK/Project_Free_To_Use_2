@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
 import { motion } from "framer-motion"
@@ -10,6 +10,7 @@ import { Input } from "@/components/ui/input"
 import { Badge } from "@/components/ui/badge"
 import { ToolCard } from "@/components/tool-card"
 import type { Tool } from "@/lib/types"
+import type { DirectoryCounts } from "@/lib/data"
 import { FAQSection } from "@/components/faq-section"
 
 const categoryChips = [
@@ -45,24 +46,51 @@ const homeFaqs = [
 
 interface HomeViewProps {
     initialTools: Tool[]
+    counts: DirectoryCounts
 }
 
-export function HomeView({ initialTools }: HomeViewProps) {
+export function HomeView({ initialTools, counts }: HomeViewProps) {
     const [searchQuery, setSearchQuery] = useState("")
+    const [searchResults, setSearchResults] = useState<Tool[]>([])
+    const [isSearching, setIsSearching] = useState(false)
 
     const router = useRouter()
 
     const trendingTools = initialTools.slice(0, 8)
+    const filteredTools = searchResults
 
-    const filteredTools = searchQuery
-        ? initialTools.filter((tool: Tool) => {
-            const searchTerms = searchQuery.toLowerCase().trim().split(/\s+/)
-            const searchableText = `${tool.name} ${tool.category} ${tool.tags.join(" ")}`.toLowerCase()
+    useEffect(() => {
+        const query = searchQuery.trim()
+        if (query.length < 2) {
+            setSearchResults([])
+            setIsSearching(false)
+            return
+        }
 
-            // AND logic: Every term must match at least one field (contained in the aggregate text)
-            return searchTerms.every(term => searchableText.includes(term))
-        })
-        : trendingTools
+        const controller = new AbortController()
+        setIsSearching(true)
+        const timeout = setTimeout(async () => {
+            try {
+                const response = await fetch(`/api/search?q=${encodeURIComponent(query)}`, {
+                    signal: controller.signal,
+                })
+                if (!response.ok) throw new Error(`Search failed: ${response.status}`)
+                setSearchResults(await response.json())
+            } catch (error) {
+                if (!controller.signal.aborted) {
+                    console.error("Homepage search failed:", error)
+                    setSearchResults([])
+                }
+            } finally {
+                if (!controller.signal.aborted) setIsSearching(false)
+            }
+        }, 200)
+
+        return () => {
+            clearTimeout(timeout)
+            controller.abort()
+        }
+    }, [searchQuery])
 
     const handleSearch = (e: React.KeyboardEvent<HTMLInputElement>) => {
         if (e.key === 'Enter' && searchQuery.trim()) {
@@ -160,7 +188,11 @@ export function HomeView({ initialTools }: HomeViewProps) {
                                                 ))
                                             ) : (
                                                 <div className="p-4 text-center text-muted-foreground">
-                                                    No results found for "{searchQuery}"
+                                                    {isSearching
+                                                        ? "Searching..."
+                                                        : searchQuery.trim().length < 2
+                                                            ? "Type at least 2 characters to search"
+                                                            : `No results found for "${searchQuery}"`}
                                                 </div>
                                             )}
                                         </div>
@@ -197,10 +229,10 @@ export function HomeView({ initialTools }: HomeViewProps) {
                 <div className="mx-auto max-w-7xl px-4 py-12 lg:px-8">
                     <div className="grid grid-cols-2 gap-8 md:grid-cols-4">
                         {[
-                            { label: "Free Apps", value: "500+" },
-                            { label: "APIs", value: "200+" },
-                            { label: "Open Source", value: "1K+" },
-                            { label: "Patents", value: "100+" },
+                            { label: "Free Apps", value: counts.apps.toLocaleString() },
+                            { label: "APIs", value: counts.apis.toLocaleString() },
+                            { label: "Open Source", value: counts.openSource.toLocaleString() },
+                            { label: "Patents", value: counts.patents.toLocaleString() },
                         ].map((stat, index) => (
                             <motion.div
                                 key={stat.label}
@@ -262,28 +294,28 @@ export function HomeView({ initialTools }: HomeViewProps) {
                                 description: "Writing, image, video, productivity AI tools",
                                 href: "/ai-tools",
                                 icon: Brain,
-                                count: initialTools.filter(t => t.type === 'app').length,
+                                count: counts.apps,
                             },
                             {
                                 title: "Free APIs",
                                 description: "AI, weather, finance, developer APIs",
                                 href: "/apis",
                                 icon: Code,
-                                count: initialTools.filter(t => t.type === 'api').length,
+                                count: counts.apis,
                             },
                             {
                                 title: "Open Source",
                                 description: "GitHub projects with MIT, Apache licenses",
                                 href: "/open-source",
                                 icon: GitBranch,
-                                count: initialTools.filter(t => t.type === 'open-source').length,
+                                count: counts.openSource,
                             },
                             {
                                 title: "Open Patents",
                                 description: "Free patents and innovation resources",
                                 href: "/open-patents",
                                 icon: Lightbulb,
-                                count: initialTools.filter(t => t.type === 'patent').length,
+                                count: counts.patents,
                             },
                         ].map((category, index) => (
                             <motion.div
@@ -305,7 +337,7 @@ export function HomeView({ initialTools }: HomeViewProps) {
                                             </p>
                                             <div className="flex items-center justify-between">
                                                 <span className="text-sm font-medium text-primary">
-                                                    {category.count > 0 ? `${category.count} tools` : category.title === 'Free AI Tools' ? '500+ tools' : 'Loading...'}
+                                                    {`${category.count.toLocaleString()} tools`}
                                                 </span>
                                                 <ArrowRight className="h-4 w-4 text-muted-foreground transition-transform group-hover:translate-x-1 group-hover:text-primary" />
                                             </div>

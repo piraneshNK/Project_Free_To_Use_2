@@ -1,14 +1,17 @@
 import { Metadata } from "next"
 import { AiToolsView } from "@/components/ai-tools-view"
 import { BreadcrumbSchema, ItemListSchema } from "@/components/json-ld"
-import { getAllTools } from "@/lib/data"
+import { getToolsForDirectory } from "@/lib/data"
+
+export const revalidate = 300
+const INITIAL_TOOLS = 60
 
 export const metadata: Metadata = {
-  title: "Best Free AI Tools Directory (2024) - Writing, Image, Video & More",
-  description: "Discover hundreds of the best free AI tools for 2024. Curated directory of free AI writers, image generators, video editors, and coding assistants.",
+  title: "Free AI Tools Directory - Writing, Image, Video & More",
+  description: "Explore AI tools for writing, image generation, video editing, coding, and productivity. Browse the Project Free To Use directory.",
   openGraph: {
-    title: "Best Free AI Tools Directory (2024)",
-    description: "Discover hundreds of the best free AI tools for 2024. Curated directory of free AI writers, image generators, video editors, and coding assistants.",
+    title: "Free AI Tools Directory - Writing, Image, Video & More",
+    description: "Explore AI tools for writing, image generation, video editing, coding, and productivity.",
     type: "website",
     url: "https://projectfreetouse.com/ai-tools",
   },
@@ -18,17 +21,7 @@ export const metadata: Metadata = {
 }
 
 export default async function AIToolsPage() {
-  const tools = await getAllTools()
-
-  // Filter AI tools but exclude LLM models (same logic as before)
-  const aiTools = tools.filter(t =>
-    t.type === 'app' &&
-    !t.tags.some(tag =>
-      tag.toLowerCase().includes('llm') ||
-      tag.toLowerCase().includes('language model') ||
-      tag.toLowerCase().includes('embedding')
-    )
-  )
+  const aiTools = await getToolsForDirectory("app", 0, INITIAL_TOOLS)
 
   return (
     <div className="pt-16">

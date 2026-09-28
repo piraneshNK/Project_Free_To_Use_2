@@ -1,16 +1,27 @@
 import { NextResponse } from 'next/server'
-import { getAllTools } from '@/lib/data'
+import { getToolsForDirectory } from '@/lib/data'
 
-// Revalidate every hour (3600 seconds)
-// This means data is fetched from Google Sheets once, then cached for 1 hour
-export const revalidate = 3600
+const directories = ["app", "api", "open-source", "patent", "llm"] as const
+type Directory = typeof directories[number]
 
-export async function GET() {
+export async function GET(request: Request) {
     try {
-        const tools = await getAllTools()
-        return NextResponse.json(tools, {
+        const directory = new URL(request.url).searchParams.get('directory')
+        if (!directory || !directories.includes(directory as Directory)) {
+            return NextResponse.json({ error: 'A valid directory is required' }, { status: 400 })
+        }
+
+        const searchParams = new URL(request.url).searchParams
+        const offsetValue = Number(searchParams.get('offset') ?? 0)
+        const limitValue = Number(searchParams.get('limit') ?? 200)
+        const offset = Number.isSafeInteger(offsetValue) && offsetValue >= 0 ? offsetValue : 0
+        const limit = Number.isSafeInteger(limitValue) && limitValue > 0
+            ? Math.min(limitValue, 250)
+            : 200
+        const tools = await getToolsForDirectory(directory as Directory)
+        return NextResponse.json(tools.slice(offset, offset + limit), {
             headers: {
-                'Cache-Control': 'public, s-maxage=3600, stale-while-revalidate=86400'
+                'Cache-Control': 'public, s-maxage=300, stale-while-revalidate=600',
             }
         })
     } catch (error) {

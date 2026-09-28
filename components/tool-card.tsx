@@ -16,6 +16,7 @@ interface ToolCardProps {
 
 export function ToolCard({ tool, index = 0 }: ToolCardProps) {
   const [copied, setCopied] = useState(false)
+  const [logoFailed, setLogoFailed] = useState(false)
 
   const handleCopyEndpoint = async () => {
     if (tool.endpoint) {
@@ -38,8 +39,8 @@ export function ToolCard({ tool, index = 0 }: ToolCardProps) {
         <div className="mb-4 flex items-start justify-between">
           <div className="flex items-center gap-3">
             <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-secondary text-lg font-bold text-primary">
-              {tool.logoUrl ? (
-                <img src={tool.logoUrl || "/placeholder.svg"} alt={tool.name} className="h-8 w-8 rounded-lg object-contain" />
+              {tool.logoUrl && !logoFailed ? (
+                <img src={tool.logoUrl} alt={`${tool.name} logo`} className="h-8 w-8 rounded-lg object-contain" onError={() => setLogoFailed(true)} />
               ) : (
                 tool.name.slice(0, 2).toUpperCase()
               )}

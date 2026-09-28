@@ -1,7 +1,9 @@
 import { Metadata } from "next"
 import { HomeView } from "@/components/home-view"
 import { WebsiteSchema, OrganizationSchema } from "@/components/json-ld"
-import { getAllTools } from "@/lib/data"
+import { getDirectoryData } from "@/lib/data"
+
+export const revalidate = 300
 
 export const metadata: Metadata = {
   title: "Project Free To Use - Best Free AI Tools, APIs & Open Source",
@@ -18,13 +20,13 @@ export const metadata: Metadata = {
 }
 
 export default async function HomePage() {
-  const tools = await getAllTools()
+  const { tools, counts } = await getDirectoryData()
 
   return (
     <>
       <WebsiteSchema />
       <OrganizationSchema />
-      <HomeView initialTools={tools} />
+      <HomeView initialTools={tools.slice(0, 8)} counts={counts} />
     </>
   )
 }

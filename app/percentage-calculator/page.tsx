@@ -3,8 +3,8 @@ import { Metadata } from "next"
 import Script from "next/script"
 
 export const metadata: Metadata = {
-    title: "Free Percentage Calculator | 5 Calculators in One - Project Free To Use",
-    description: "All-in-one percentage calculator with 5 calculation modes. Calculate percentages, find values, percentage difference, percentage increase/decrease, and percentage change. Free, fast, and accurate.",
+    title: "Percentage Calculator: Free 5-in-1 Online Tool",
+    description: "Calculate what percent one number is of another, find a percentage of a value, and work out percentage increases, decreases, and change with five free calculators.",
     keywords: [
         "percentage calculator",
         "percent calculator",
@@ -17,19 +17,21 @@ export const metadata: Metadata = {
         "find percentage",
         "percentage formula calculator",
         "online percentage calculator",
-        "free percentage calculator 2026"
+        "free percentage calculator",
+        "what percentage is x of y",
+        "percentage of a number calculator"
     ],
     openGraph: {
-        title: "Free Percentage Calculator | 5 Calculators in One",
-        description: "Calculate percentages instantly with 5 powerful calculators. Find values, percentages, differences, and changes. Completely free.",
+        title: "Percentage Calculator: Free 5-in-1 Online Tool",
+        description: "Calculate percentages, increases, decreases, and percentage change with five free online calculators.",
         type: "website",
         url: "https://projectfreetouse.com/percentage-calculator",
         siteName: "Project Free To Use",
     },
     twitter: {
         card: "summary_large_image",
-        title: "Free Percentage Calculator | 5 Calculators in One",
-        description: "All-in-one percentage calculator with 5 calculation modes. Free and instant results.",
+        title: "Percentage Calculator: Free 5-in-1 Online Tool",
+        description: "Calculate percentages, increases, decreases, and percentage change instantly.",
     },
     alternates: {
         canonical: "https://projectfreetouse.com/percentage-calculator",
@@ -39,34 +41,57 @@ export const metadata: Metadata = {
 export default function PercentageCalculatorPage() {
     const jsonLd = {
         "@context": "https://schema.org",
-        "@type": "SoftwareApplication",
-        "name": "Percentage Calculator",
-        "applicationCategory": "UtilitiesApplication",
-        "operatingSystem": "Web",
-        "offers": {
-            "@type": "Offer",
-            "price": "0",
-            "priceCurrency": "USD",
-        },
-        "description": "All-in-one percentage calculator with 5 calculation modes: find value (what is X% of Y?), find percentage (X is what % of Y?), find original (X is Y% of what?), percentage difference, and percentage change.",
-        "url": "https://projectfreetouse.com/percentage-calculator",
-        "keywords": [
-            "percentage calculator",
-            "percent calculator",
-            "percentage change calculator",
-            "percentage difference calculator",
-            "calculate percentage online",
-            "percentage increase calculator",
-            "percentage decrease calculator",
-            "free percentage calculator"
+        "@graph": [
+            {
+                "@type": "SoftwareApplication",
+                "name": "Free Percentage Calculator",
+                "applicationCategory": "UtilitiesApplication",
+                "operatingSystem": "Web",
+                "offers": {
+                    "@type": "Offer",
+                    "price": "0",
+                    "priceCurrency": "USD",
+                },
+                "description": "Free online percentage calculator with five modes for calculating a percentage of a value, finding what percent one number is of another, reversing a percentage, and calculating percentage change.",
+                "url": "https://projectfreetouse.com/percentage-calculator",
+                "featureList": [
+                    "Calculate what is X% of Y",
+                    "Find what percentage X is of Y",
+                    "Calculate X is Y% of what",
+                    "Calculate percentage change between two values",
+                    "Calculate percentage increase and decrease",
+                ],
+            },
+            {
+                "@type": "FAQPage",
+                "mainEntity": [
+                    {
+                        "@type": "Question",
+                        "name": "How do I calculate what percentage one number is of another?",
+                        "acceptedAnswer": {
+                            "@type": "Answer",
+                            "text": "Divide the part by the whole and multiply by 100. For example, 25 is 25% of 100. Enter both values in the Find Percentage calculator to get the result.",
+                        },
+                    },
+                    {
+                        "@type": "Question",
+                        "name": "How do I calculate percentage increase?",
+                        "acceptedAnswer": {
+                            "@type": "Answer",
+                            "text": "Enter the original and new values in the Percentage Difference calculator. It calculates the relative change as (new value minus original value) divided by the original value, multiplied by 100.",
+                        },
+                    },
+                    {
+                        "@type": "Question",
+                        "name": "Can I calculate a percentage decrease?",
+                        "acceptedAnswer": {
+                            "@type": "Answer",
+                            "text": "Yes. Compare the original and new values in Percentage Difference, or enter a base value and percentage in Percentage Change and select Decrease.",
+                        },
+                    },
+                ],
+            },
         ],
-        "featureList": [
-            "Calculate what is X% of Y",
-            "Find what percentage X is of Y",
-            "Calculate X is Y% of what",
-            "Percentage difference between two values",
-            "Percentage increase and decrease calculator"
-        ]
     }
 
     return (

@@ -1,13 +1,15 @@
 "use client"
 
-import { useState, useMemo, useEffect } from "react"
+import { useState, useMemo } from "react"
 import { motion } from "framer-motion"
 import { Lightbulb } from "lucide-react"
 import { ToolCard } from "@/components/tool-card"
-import type { Tool } from "@/lib/types"
 import { SearchFilter } from "@/components/search-filter"
 import { BreadcrumbSchema, ItemListSchema } from "@/components/json-ld"
 import { FAQSection } from "@/components/faq-section"
+import { useDirectoryTools } from "@/hooks/use-directory-tools"
+
+const INITIAL_VISIBLE = 60
 
 const patentCategories = [
   { id: "ai", label: "AI & ML" },
@@ -43,22 +45,8 @@ const patentFaqs = [
 export default function OpenPatentsPage() {
   const [searchQuery, setSearchQuery] = useState("")
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null)
-  const [patents, setPatents] = useState<Tool[]>([])
-  const [loading, setLoading] = useState(true)
-
-  useEffect(() => {
-    fetch('/api/tools')
-      .then(res => res.json())
-      .then((tools: Tool[]) => {
-        const patentTools = tools.filter(t => t.type === 'patent')
-        setPatents(patentTools)
-        setLoading(false)
-      })
-      .catch(err => {
-        console.error('Error loading patents:', err)
-        setLoading(false)
-      })
-  }, [])
+  const [visibleCount, setVisibleCount] = useState(INITIAL_VISIBLE)
+  const { tools: patents, loading } = useDirectoryTools("patent")
 
   const filteredTools = useMemo(() => {
     return patents.filter((tool) => {
@@ -162,25 +150,34 @@ export default function OpenPatentsPage() {
         <SearchFilter
           placeholder="Search patents and innovation resources..."
           categories={patentCategories}
-          onSearch={setSearchQuery}
-          onFilterChange={setSelectedCategory}
+          onSearch={(value) => { setSearchQuery(value); setVisibleCount(INITIAL_VISIBLE) }}
+          onFilterChange={(value) => { setSelectedCategory(value); setVisibleCount(INITIAL_VISIBLE) }}
           selectedCategory={selectedCategory}
         />
 
         {/* Results Count */}
         <p className="mb-6 text-sm text-muted-foreground">
-          Showing {filteredTools.length} {filteredTools.length === 1 ? "resource" : "resources"}
+          Showing {Math.min(visibleCount, filteredTools.length)} of {filteredTools.length} {filteredTools.length === 1 ? "resource" : "resources"}
+          {loading && " loaded so far"}
           {searchQuery && ` for "${searchQuery}"`}
         </p>
 
         {/* Projects Grid */}
         <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-          {filteredTools.map((tool, index) => (
+          {filteredTools.slice(0, visibleCount).map((tool, index) => (
             <ToolCard key={tool.id} tool={tool} index={index} />
           ))}
         </div>
 
-        {filteredTools.length === 0 && (
+        {filteredTools.length > visibleCount && (
+          <button className="mt-8 rounded-md border border-border px-5 py-2 text-sm font-medium hover:bg-muted" onClick={() => setVisibleCount((count) => count + INITIAL_VISIBLE)}>
+            Show {Math.min(INITIAL_VISIBLE, filteredTools.length - visibleCount)} more resources
+          </button>
+        )}
+
+        {loading && <p className="mt-6 text-center text-sm text-muted-foreground">Loading remaining resources...</p>}
+
+        {filteredTools.length === 0 && !loading && (
           <div className="py-16 text-center">
             <p className="text-lg text-muted-foreground">
               No patent resources found matching your criteria.

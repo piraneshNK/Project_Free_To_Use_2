@@ -52,28 +52,64 @@ export default function CalculatorPage() {
 
     const jsonLd = {
         "@context": "https://schema.org",
-        "@type": "SoftwareApplication",
-        "name": "AI Overlap & Burn Calculator",
-        "applicationCategory": "UtilitiesApplication",
-        "operatingSystem": "Web",
-        "offers": {
-            "@type": "Offer",
-            "price": "0",
-            "priceCurrency": "USD",
-        },
-        "description": "Compare 50+ paid AI tools including ChatGPT, Claude, and Gemini. Calculate monthly subscription costs, visual overlap, and find cheaper alternatives.",
-        "url": "https://projectfreetouse.com/ai-overlap-burn-calculator",
-        "keywords": [
-            "AI subscription calculator",
-            "AI cost estimator",
-            "ChatGPT vs Claude vs Gemini",
-            "AI tool comparison",
-            "optimize AI spending",
-            "reduce AI bill",
-            "free AI tools",
-            "AI stack analysis",
-            "best AI subscriptions 2026"
-        ]
+        "@graph": [
+            {
+                "@type": "SoftwareApplication",
+                "name": "AI Overlap & Burn Calculator",
+                "applicationCategory": "UtilitiesApplication",
+                "operatingSystem": "Web",
+                "offers": {
+                    "@type": "Offer",
+                    "price": "0",
+                    "priceCurrency": "USD",
+                },
+                "description": "Compare AI subscription costs, review overlapping capabilities, and estimate potential monthly savings.",
+                "url": "https://projectfreetouse.com/ai-overlap-burn-calculator",
+                "keywords": [
+                    "AI subscription calculator",
+                    "AI cost calculator",
+                    "AI subscription cost comparison",
+                    "AI spending calculator",
+                    "AI tool overlap checker",
+                    "AI subscription savings calculator",
+                    "ChatGPT Claude Gemini cost comparison",
+                ],
+                "featureList": [
+                    "Estimate monthly AI subscription costs",
+                    "Compare overlapping AI tool capabilities",
+                    "Review subscription recommendations",
+                ],
+            },
+            {
+                "@type": "FAQPage",
+                "mainEntity": [
+                    {
+                        "@type": "Question",
+                        "name": "How can I compare the cost of AI subscriptions?",
+                        "acceptedAnswer": {
+                            "@type": "Answer",
+                            "text": "Select the AI subscriptions you currently use. The calculator totals their monthly cost and displays the combined estimate in your selected currency.",
+                        },
+                    },
+                    {
+                        "@type": "Question",
+                        "name": "What does AI tool overlap mean?",
+                        "acceptedAnswer": {
+                            "@type": "Answer",
+                            "text": "AI tool overlap describes capabilities shared by multiple subscriptions, such as reasoning, search, or coding. Reviewing overlap can help you decide whether every subscription is useful for your workflow.",
+                        },
+                    },
+                    {
+                        "@type": "Question",
+                        "name": "Can this calculator help reduce my AI subscription bill?",
+                        "acceptedAnswer": {
+                            "@type": "Answer",
+                            "text": "It helps you review your selected subscriptions, their estimated cost, and overlapping capabilities so you can decide which plans to keep.",
+                        },
+                    },
+                ],
+            },
+        ],
     }
 
     return (
@@ -160,21 +196,21 @@ export default function CalculatorPage() {
                 <h2 className="text-3xl font-bold text-center mb-8">Frequently Asked Questions about AI Costs</h2>
                 <div className="space-y-8">
                     <div>
-                        <h3 className="text-xl font-semibold mb-2">How much should I spend on AI subscriptions?</h3>
+                        <h3 className="text-xl font-semibold mb-2">How can I compare the cost of AI subscriptions?</h3>
                         <p className="text-muted-foreground leading-relaxed">
-                            Most professionals spend between <strong>$20-$60/month</strong>. Combining a primary reasoning engine (like <strong>ChatGPT Plus</strong> or <strong>Claude Pro</strong>) with a specialized tool for coding (<strong>Cursor</strong>) or research (<strong>Perplexity</strong>) is common. Spending over $100/mo often indicates redundancy.
+                            Select the AI subscriptions you currently use. The calculator totals their monthly cost and displays the combined estimate in your selected currency.
                         </p>
                     </div>
                     <div>
-                        <h3 className="text-xl font-semibold mb-2">ChatGPT Plus vs. Claude Pro: Which is better?</h3>
+                        <h3 className="text-xl font-semibold mb-2">What does AI tool overlap mean?</h3>
                         <p className="text-muted-foreground leading-relaxed">
-                            <strong>ChatGPT Plus</strong> is generally better for multimodal tasks, image generation (DALL-E 3), and broad knowledge. <strong>Claude Pro (Claude 3.5 Sonnet)</strong> is often preferred by developers for its superior coding capabilities and larger context window. Our calculator helps you visualize if you really need both.
+                            AI tool overlap describes capabilities shared by multiple subscriptions, such as reasoning, search, or coding. Reviewing overlap can help you decide whether every subscription is useful for your workflow.
                         </p>
                     </div>
                     <div>
-                        <h3 className="text-xl font-semibold mb-2">Can I replace paid tools with free alternatives?</h3>
+                        <h3 className="text-xl font-semibold mb-2">Can this calculator help reduce my AI subscription bill?</h3>
                         <p className="text-muted-foreground leading-relaxed">
-                            Yes! Many paid features have free counterparts. For example, instead of paying for <strong>Midjourney</strong>, you can use <strong>Adobe Firefly</strong> (free tier) or <strong>Stable Diffusion</strong>. Use our "Back to Tools" link to explore 500+ free AI tools in our directory to replace expensive monthly subscriptions.
+                            It helps you review your selected subscriptions, their estimated cost, and overlapping capabilities so you can decide which plans to keep.
                         </p>
                     </div>
                 </div>

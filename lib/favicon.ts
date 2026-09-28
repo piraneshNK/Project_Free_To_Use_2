@@ -7,7 +7,9 @@
  */
 export function extractDomain(url: string): string {
     try {
-        const urlObj = new URL(url)
+        const normalizedUrl = /^[a-z][a-z\d+.-]*:\/\//i.test(url) ? url : `https://${url}`
+        const urlObj = new URL(normalizedUrl)
+        if (urlObj.protocol !== "http:" && urlObj.protocol !== "https:") return ''
         return urlObj.hostname
     } catch {
         return ''
@@ -32,7 +34,7 @@ const LOGO_OVERRIDES: Record<string, string> = {
  * This service fetches the favicon from any website
  */
 export function getFaviconUrl(websiteUrl: string): string {
-    if (!websiteUrl) return ''
+    if (!websiteUrl || websiteUrl.startsWith("/")) return ''
 
     const domain = extractDomain(websiteUrl)
     if (!domain) return ''

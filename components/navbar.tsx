@@ -20,7 +20,6 @@ const navLinks = [
   { href: "/apis", label: "APIs" },
   { href: "/open-patents", label: "Open Patents" },
   { href: "/llm-models", label: "LLM Models" },
-  { href: "/llm-models", label: "LLM Models" },
   { href: "/free-tools", label: "Free Tools" },
   { href: "/about", label: "About" },
 ]

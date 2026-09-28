@@ -43,7 +43,7 @@ ${email ? `Submitter Email: ${email}` : 'No email provided'}
 
 ---
 Submitted from ProjectFreeToUse.com
-Review and add to Google Sheets to publish.
+Review and add to the directory to publish.
         `.trim()
 
         formData.append('message', message)

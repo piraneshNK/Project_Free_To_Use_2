@@ -4,7 +4,7 @@ import { slugify } from '@/lib/transform'
 
 const BASE_URL = 'https://projectfreetouse.com'
 
-export const revalidate = 3600 // Revalidate every hour
+export const revalidate = 300
 
 export async function GET() {
     try {
@@ -20,6 +20,8 @@ export async function GET() {
             '/open-patents',
             '/llm-models',
             '/ai-overlap-burn-calculator',
+            '/age-calculator',
+            '/percentage-calculator',
             '/about',
             '/blog',
             '/submit',
