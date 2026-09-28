@@ -179,6 +179,8 @@ async function readTable(table: DirectoryTable) {
 }
 
 function getTableData(table: DirectoryTable): Promise<TableData> {
+  if (!supabase) return Promise.resolve({ rows: [], count: 0 })
+
   const cached = tableCache.get(table)
   if (cached && cached.expiresAt > Date.now()) return cached.promise
 
