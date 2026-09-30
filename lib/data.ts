@@ -1,10 +1,13 @@
-import { createClient as createSupabaseClient } from "@supabase/supabase-js"
+import "server-only"
+import sql from "./db"
 import type { Tool } from "@/lib/types"
 import { slugify } from "./transform"
 import { getFaviconUrl } from "./favicon"
 
 const PAGE_SIZE = 1000
 const CACHE_TTL_MS = 5 * 60 * 1000
+type DirectoryTable = "ai_tools" | "apis" | "llm_models" | "open_products" | "software"
+
 const TABLE_COLUMNS: Record<DirectoryTable, string> = {
   ai_tools: "id,name,slug,website,description,category",
   apis: "id,name,slug,description,auth,https,cors,website,category",
@@ -12,14 +15,6 @@ const TABLE_COLUMNS: Record<DirectoryTable, string> = {
   open_products: "id,name,pattern_type,description,use_case,difficulty,source,tags",
   software: "id,name,slug,website,description,category,logo_url,favicon_url",
 }
-
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
-const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY
-const supabase = supabaseUrl && supabaseKey
-  ? createSupabaseClient(supabaseUrl, supabaseKey, {
-      auth: { persistSession: false, autoRefreshToken: false },
-    })
-  : null
 
 const localTools: Tool[] = [
   {
@@ -66,7 +61,6 @@ const localTools: Tool[] = [
   },
 ]
 
-type DirectoryTable = "ai_tools" | "apis" | "llm_models" | "open_products" | "software"
 export type DirectoryCounts = {
   apps: number
   apis: number
@@ -79,7 +73,7 @@ type DirectoryData = {
   counts: DirectoryCounts
 }
 
-type TableData = Awaited<ReturnType<typeof readTable>>
+type TableData = { rows: Record<string, unknown>[]; count: number }
 const tableCache = new Map<DirectoryTable, { expiresAt: number; promise: Promise<TableData> }>()
 let directoryCache: { expiresAt: number; promise: Promise<DirectoryData> } | null = null
 
@@ -155,32 +149,25 @@ function mapRow(row: Record<string, unknown>, table: DirectoryTable): Tool | nul
   }
 }
 
-async function readTable(table: DirectoryTable) {
-  if (!supabase) throw new Error("Supabase environment variables are not configured")
+async function readTable(table: DirectoryTable): Promise<TableData> {
+  const countResult = await sql.unsafe<{ count: string }[]>(
+    `SELECT COUNT(*)::text AS count FROM public.${table}`,
+  )
+  const count = Number(countResult[0]?.count ?? 0)
   const rows: Record<string, unknown>[] = []
-  let count = 0
 
-  for (let start = 0; ; start += PAGE_SIZE) {
-    const { data, count: exactCount, error } = await supabase
-      .from(table)
-      .select(TABLE_COLUMNS[table], { count: "exact" })
-      .order("id", { ascending: true })
-      .range(start, start + PAGE_SIZE - 1)
-
-    if (error) throw new Error(`Unable to read ${table}: ${error.message}`)
-
-    const page = (data ?? []) as unknown as Record<string, unknown>[]
-    rows.push(...page)
-    count = exactCount ?? rows.length
-    if (page.length < PAGE_SIZE || rows.length >= count) break
+  for (let offset = 0; offset < count; offset += PAGE_SIZE) {
+    const result = await sql.unsafe<Record<string, unknown>[]>(
+      `SELECT ${TABLE_COLUMNS[table]} FROM public.${table} ORDER BY id ASC LIMIT $1 OFFSET $2`,
+      [PAGE_SIZE, offset],
+    )
+    rows.push(...result)
   }
 
   return { rows, count }
 }
 
 function getTableData(table: DirectoryTable): Promise<TableData> {
-  if (!supabase) return Promise.resolve({ rows: [], count: 0 })
-
   const cached = tableCache.get(table)
   if (cached && cached.expiresAt > Date.now()) return cached.promise
 
@@ -198,12 +185,11 @@ async function loadDirectoryData(): Promise<DirectoryData> {
     try {
       return [table, await getTableData(table)] as const
     } catch (error) {
-      console.error(`Error loading Supabase table ${table}:`, error)
+      console.error(`Error loading database table ${table}:`, error)
       return [table, { rows: [], count: 0 }] as const
     }
   }))
-  const tableData = Object.fromEntries(results) as Record<DirectoryTable, Awaited<ReturnType<typeof readTable>>>
-
+  const tableData = Object.fromEntries(results) as Record<DirectoryTable, TableData>
   const tools = tables.flatMap((table) => tableData[table].rows
     .map((row) => mapRow(row, table))
     .filter((tool): tool is Tool => tool !== null))
