@@ -1,5 +1,5 @@
 import "server-only"
-import sql from "./db"
+import { getSql } from "./db"
 import type { Tool } from "@/lib/types"
 import { slugify } from "./transform"
 import { getFaviconUrl } from "./favicon"
@@ -150,6 +150,7 @@ function mapRow(row: Record<string, unknown>, table: DirectoryTable): Tool | nul
 }
 
 async function readTable(table: DirectoryTable): Promise<TableData> {
+  const sql = getSql()
   const countResult = await sql.unsafe<{ count: string }[]>(
     `SELECT COUNT(*)::text AS count FROM public.${table}`,
   )
@@ -168,6 +169,10 @@ async function readTable(table: DirectoryTable): Promise<TableData> {
 }
 
 function getTableData(table: DirectoryTable): Promise<TableData> {
+  if (!process.env.DATABASE_URL) {
+    return Promise.resolve({ rows: [], count: 0 })
+  }
+
   const cached = tableCache.get(table)
   if (cached && cached.expiresAt > Date.now()) return cached.promise
 
@@ -231,7 +236,13 @@ export async function getToolsForDirectory(
           ? "llm_models"
           : "ai_tools"
 
-  const { rows } = await getTableData(table)
+  let rows: Record<string, unknown>[]
+  try {
+    rows = (await getTableData(table)).rows
+  } catch (error) {
+    console.error(`Error loading database table ${table}:`, error)
+    rows = []
+  }
   const tools = rows
     .map((row) => mapRow(row, table))
     .filter((tool): tool is Tool => tool !== null)
