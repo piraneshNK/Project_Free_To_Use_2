@@ -51,7 +51,7 @@ export function AiToolsView({ initialTools }: AiToolsViewProps) {
     const [searchQuery, setSearchQuery] = useState("")
     const [selectedCategory, setSelectedCategory] = useState<string | null>(null)
     const [visibleCount, setVisibleCount] = useState(INITIAL_VISIBLE)
-    const { tools, loading } = useDirectoryTools("app", initialTools)
+    const { tools, loading, error } = useDirectoryTools("app", initialTools)
 
     const filteredApps = useMemo(() => {
         return tools.filter((app) => {
@@ -140,6 +140,8 @@ export function AiToolsView({ initialTools }: AiToolsViewProps) {
                 {selectedCategory && ` in ${aiCategories.find((c) => c.id === selectedCategory)?.label}`}
             </p>
 
+            {error && <p role="alert" className="mb-6 text-sm text-destructive">{error}</p>}
+
             {/* Tools Grid */}
             <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
                 {filteredApps.slice(0, visibleCount).map((app, index) => (
@@ -155,7 +157,7 @@ export function AiToolsView({ initialTools }: AiToolsViewProps) {
 
             {loading && <p className="mt-6 text-center text-sm text-muted-foreground">Loading remaining AI tools...</p>}
 
-            {filteredApps.length === 0 && !loading && (
+            {filteredApps.length === 0 && !loading && !error && (
                 <div className="py-16 text-center">
                     <p className="text-lg text-muted-foreground">No AI tools found matching your criteria.</p>
                     <button

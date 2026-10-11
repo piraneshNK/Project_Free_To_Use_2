@@ -45,7 +45,7 @@ export default function LLMModelsPage() {
   const [searchQuery, setSearchQuery] = useState("")
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null)
   const [visibleCount, setVisibleCount] = useState(INITIAL_VISIBLE)
-  const { tools: models, loading } = useDirectoryTools("llm")
+  const { tools: models, loading, error } = useDirectoryTools("llm")
 
   const filteredModels = useMemo(() => {
     return models.filter((model) => {
@@ -149,6 +149,8 @@ export default function LLMModelsPage() {
           {selectedCategory && ` in ${llmCategories.find((c) => c.id === selectedCategory)?.label}`}
         </p>
 
+        {error && <p role="alert" className="mb-6 text-sm text-destructive">{error}</p>}
+
         {/* Models Grid */}
         {loading ? (
           <div className="py-16 text-center">
@@ -170,7 +172,7 @@ export default function LLMModelsPage() {
 
         {loading && <p className="mt-6 text-center text-sm text-muted-foreground">Loading remaining models...</p>}
 
-        {filteredModels.length === 0 && !loading && (
+        {filteredModels.length === 0 && !loading && !error && (
           <div className="py-16 text-center">
             <p className="text-lg text-muted-foreground">No LLM models found matching your criteria.</p>
             <button

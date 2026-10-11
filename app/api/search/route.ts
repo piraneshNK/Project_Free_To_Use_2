@@ -4,6 +4,8 @@ import { getAllTools } from "@/lib/data"
 const MAX_QUERY_LENGTH = 100
 const MAX_RESULTS = 8
 
+export const dynamic = "force-dynamic"
+
 export async function GET(request: Request) {
     const query = new URL(request.url).searchParams.get("q")?.trim() ?? ""
 

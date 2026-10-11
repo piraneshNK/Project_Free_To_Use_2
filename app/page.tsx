@@ -3,7 +3,7 @@ import { HomeView } from "@/components/home-view"
 import { WebsiteSchema, OrganizationSchema } from "@/components/json-ld"
 import { getDirectoryData } from "@/lib/data"
 
-export const revalidate = 300
+export const dynamic = "force-dynamic"
 
 export const metadata: Metadata = {
   title: "Project Free To Use - Best Free AI Tools, APIs & Open Source",

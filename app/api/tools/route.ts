@@ -4,6 +4,8 @@ import { getToolsForDirectory } from '@/lib/data'
 const directories = ["app", "api", "open-source", "patent", "llm"] as const
 type Directory = typeof directories[number]
 
+export const dynamic = "force-dynamic"
+
 export async function GET(request: Request) {
     try {
         const directory = new URL(request.url).searchParams.get('directory')
@@ -18,10 +20,10 @@ export async function GET(request: Request) {
         const limit = Number.isSafeInteger(limitValue) && limitValue > 0
             ? Math.min(limitValue, 250)
             : 200
-        const tools = await getToolsForDirectory(directory as Directory)
-        return NextResponse.json(tools.slice(offset, offset + limit), {
+        const tools = await getToolsForDirectory(directory as Directory, offset, limit)
+        return NextResponse.json(tools, {
             headers: {
-                'Cache-Control': 'public, s-maxage=300, stale-while-revalidate=600',
+                'Cache-Control': 'no-store',
             }
         })
     } catch (error) {

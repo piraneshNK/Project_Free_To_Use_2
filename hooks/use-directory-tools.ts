@@ -12,6 +12,7 @@ export function useDirectoryTools(
 ) {
     const [tools, setTools] = useState<Tool[]>(initialTools)
     const [loading, setLoading] = useState(true)
+    const [error, setError] = useState<string | null>(null)
 
     useEffect(() => {
         const controller = new AbortController()
@@ -20,6 +21,7 @@ export function useDirectoryTools(
         async function loadDirectory() {
             setTools(initialTools)
             setLoading(true)
+            setError(null)
             let offset = initialTools.length
 
             try {
@@ -40,6 +42,7 @@ export function useDirectoryTools(
             } catch (error) {
                 if (active && !controller.signal.aborted) {
                     console.error(`Error loading ${directory} directory:`, error)
+                    setError("Directory data could not be loaded. Please try again later.")
                 }
             } finally {
                 if (active) setLoading(false)
@@ -53,5 +56,5 @@ export function useDirectoryTools(
         }
     }, [directory, initialTools])
 
-    return { tools, loading }
+    return { tools, loading, error }
 }

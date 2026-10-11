@@ -1,11 +1,10 @@
 import "server-only"
-import { getSql } from "./db"
+import { getSupabaseServerClient } from "@/utils/supabase/server"
 import type { Tool } from "@/lib/types"
 import { slugify } from "./transform"
 import { getFaviconUrl } from "./favicon"
 
 const PAGE_SIZE = 1000
-const CACHE_TTL_MS = 5 * 60 * 1000
 type DirectoryTable = "ai_tools" | "apis" | "llm_models" | "open_products" | "software"
 
 const TABLE_COLUMNS: Record<DirectoryTable, string> = {
@@ -74,8 +73,6 @@ type DirectoryData = {
 }
 
 type TableData = { rows: Record<string, unknown>[]; count: number }
-const tableCache = new Map<DirectoryTable, { expiresAt: number; promise: Promise<TableData> }>()
-let directoryCache: { expiresAt: number; promise: Promise<DirectoryData> } | null = null
 
 function valueFrom(row: Record<string, unknown>, ...keys: string[]): string {
   for (const key of keys) {
@@ -150,50 +147,58 @@ function mapRow(row: Record<string, unknown>, table: DirectoryTable): Tool | nul
 }
 
 async function readTable(table: DirectoryTable): Promise<TableData> {
-  const sql = getSql()
-  const countResult = await sql.unsafe<{ count: string }[]>(
-    `SELECT COUNT(*)::text AS count FROM public.${table}`,
-  )
-  const count = Number(countResult[0]?.count ?? 0)
-  const rows: Record<string, unknown>[] = []
+  const supabase = getSupabaseServerClient()
+  const { data, count, error } = await supabase
+    .from(table)
+    .select(TABLE_COLUMNS[table], { count: "exact" })
+    .order("id", { ascending: true })
+    .range(0, PAGE_SIZE - 1)
 
-  for (let offset = 0; offset < count; offset += PAGE_SIZE) {
-    const result = await sql.unsafe<Record<string, unknown>[]>(
-      `SELECT ${TABLE_COLUMNS[table]} FROM public.${table} ORDER BY id ASC LIMIT $1 OFFSET $2`,
-      [PAGE_SIZE, offset],
-    )
-    rows.push(...result)
+  if (error) {
+    throw new Error(`Supabase query failed for ${table}: ${error.message}`)
   }
 
-  return { rows, count }
+  const rows = (data ?? []) as Record<string, unknown>[]
+  const rowCount = count ?? rows.length
+
+  for (let offset = PAGE_SIZE; offset < rowCount; offset += PAGE_SIZE) {
+    const { data: nextPage, error: pageError } = await supabase
+      .from(table)
+      .select(TABLE_COLUMNS[table])
+      .order("id", { ascending: true })
+      .range(offset, offset + PAGE_SIZE - 1)
+
+    if (pageError) {
+      throw new Error(`Supabase query failed for ${table}: ${pageError.message}`)
+    }
+
+    rows.push(...(nextPage ?? []) as Record<string, unknown>[])
+  }
+
+  return { rows, count: rowCount }
 }
 
-function getTableData(table: DirectoryTable): Promise<TableData> {
-  if (!process.env.DATABASE_URL) {
-    return Promise.resolve({ rows: [], count: 0 })
+async function readTablePage(
+  table: DirectoryTable,
+  offset: number,
+  limit: number,
+): Promise<Record<string, unknown>[]> {
+  const { data, error } = await getSupabaseServerClient()
+    .from(table)
+    .select(TABLE_COLUMNS[table])
+    .order("id", { ascending: true })
+    .range(offset, offset + limit - 1)
+
+  if (error) {
+    throw new Error(`Supabase query failed for ${table}: ${error.message}`)
   }
 
-  const cached = tableCache.get(table)
-  if (cached && cached.expiresAt > Date.now()) return cached.promise
-
-  const promise = readTable(table).catch((error) => {
-    tableCache.delete(table)
-    throw error
-  })
-  tableCache.set(table, { expiresAt: Date.now() + CACHE_TTL_MS, promise })
-  return promise
+  return (data ?? []) as Record<string, unknown>[]
 }
 
 async function loadDirectoryData(): Promise<DirectoryData> {
   const tables: DirectoryTable[] = ["ai_tools", "apis", "llm_models", "open_products", "software"]
-  const results = await Promise.all(tables.map(async (table) => {
-    try {
-      return [table, await getTableData(table)] as const
-    } catch (error) {
-      console.error(`Error loading database table ${table}:`, error)
-      return [table, { rows: [], count: 0 }] as const
-    }
-  }))
+  const results = await Promise.all(tables.map(async (table) => [table, await readTable(table)] as const))
   const tableData = Object.fromEntries(results) as Record<DirectoryTable, TableData>
   const tools = tables.flatMap((table) => tableData[table].rows
     .map((row) => mapRow(row, table))
@@ -211,14 +216,7 @@ async function loadDirectoryData(): Promise<DirectoryData> {
 }
 
 export function getDirectoryData(): Promise<DirectoryData> {
-  if (directoryCache && directoryCache.expiresAt > Date.now()) return directoryCache.promise
-
-  const promise = loadDirectoryData().catch((error) => {
-    directoryCache = null
-    throw error
-  })
-  directoryCache = { expiresAt: Date.now() + CACHE_TTL_MS, promise }
-  return promise
+  return loadDirectoryData()
 }
 
 export async function getToolsForDirectory(
@@ -236,24 +234,20 @@ export async function getToolsForDirectory(
           ? "llm_models"
           : "ai_tools"
 
-  let rows: Record<string, unknown>[]
-  try {
-    rows = (await getTableData(table)).rows
-  } catch (error) {
-    console.error(`Error loading database table ${table}:`, error)
-    rows = []
-  }
+  const rows = limit === undefined
+    ? (await readTable(table)).rows.slice(offset)
+    : await readTablePage(table, offset, limit)
   const tools = rows
     .map((row) => mapRow(row, table))
     .filter((tool): tool is Tool => tool !== null)
 
   if (directory === "app") {
-    return [...tools, ...localTools].filter((tool) =>
+    return tools.filter((tool) =>
       !["ai-overlap-burn-calculator", "age-calculator", "percentage-calculator"].includes(tool.id)
     )
   }
 
-  return limit === undefined ? tools.slice(offset) : tools.slice(offset, offset + limit)
+  return tools
 }
 
 export async function getAllTools(): Promise<Tool[]> {

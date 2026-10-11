@@ -14,7 +14,7 @@ import { SoftwareApplicationSchema, BreadcrumbSchema } from "@/components/json-l
 import { getAllTools, getRelatedTools } from "@/lib/data"
 import { slugify } from "@/lib/transform"
 
-export const revalidate = 300
+export const dynamic = "force-dynamic"
 
 interface ToolPageProps {
   params: Promise<{ slug: string }>
@@ -53,16 +53,6 @@ export async function generateMetadata({ params }: ToolPageProps): Promise<Metad
       canonical: `https://projectfreetouse.com/tool/${slug}`,
     }
   }
-}
-
-export async function generateStaticParams() {
-  const tools = await getAllTools()
-  return tools
-    .filter((tool) => tool.featured)
-    .slice(0, 100)
-    .map((tool) => ({
-    slug: tool.slug || slugify(tool.name),
-    }))
 }
 
 export default async function ToolPage({ params }: ToolPageProps) {

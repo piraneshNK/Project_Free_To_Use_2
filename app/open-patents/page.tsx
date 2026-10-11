@@ -46,7 +46,7 @@ export default function OpenPatentsPage() {
   const [searchQuery, setSearchQuery] = useState("")
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null)
   const [visibleCount, setVisibleCount] = useState(INITIAL_VISIBLE)
-  const { tools: patents, loading } = useDirectoryTools("patent")
+  const { tools: patents, loading, error } = useDirectoryTools("patent")
 
   const filteredTools = useMemo(() => {
     return patents.filter((tool) => {
@@ -162,6 +162,8 @@ export default function OpenPatentsPage() {
           {searchQuery && ` for "${searchQuery}"`}
         </p>
 
+        {error && <p role="alert" className="mb-6 text-sm text-destructive">{error}</p>}
+
         {/* Projects Grid */}
         <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
           {filteredTools.slice(0, visibleCount).map((tool, index) => (
@@ -177,7 +179,7 @@ export default function OpenPatentsPage() {
 
         {loading && <p className="mt-6 text-center text-sm text-muted-foreground">Loading remaining resources...</p>}
 
-        {filteredTools.length === 0 && !loading && (
+        {filteredTools.length === 0 && !loading && !error && (
           <div className="py-16 text-center">
             <p className="text-lg text-muted-foreground">
               No patent resources found matching your criteria.

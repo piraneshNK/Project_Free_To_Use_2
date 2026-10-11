@@ -4,7 +4,7 @@ import { slugify } from '@/lib/transform'
 
 const BASE_URL = 'https://projectfreetouse.com'
 
-export const revalidate = 300
+export const dynamic = 'force-dynamic'
 
 export async function GET() {
     try {
@@ -64,7 +64,7 @@ export async function GET() {
         return new NextResponse(xml, {
             headers: {
                 'Content-Type': 'application/xml',
-                'Cache-Control': 'public, s-maxage=3600, stale-while-revalidate=86400',
+                'Cache-Control': 'no-store',
             },
         })
     } catch (error) {

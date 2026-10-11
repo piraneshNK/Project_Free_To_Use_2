@@ -3,7 +3,7 @@ import { AiToolsView } from "@/components/ai-tools-view"
 import { BreadcrumbSchema, ItemListSchema } from "@/components/json-ld"
 import { getToolsForDirectory } from "@/lib/data"
 
-export const revalidate = 300
+export const dynamic = "force-dynamic"
 const INITIAL_TOOLS = 60
 
 export const metadata: Metadata = {
