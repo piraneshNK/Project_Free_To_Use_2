@@ -97,6 +97,10 @@ export default function FreeToolsClient() {
                     </motion.div>
                 </div>
 
+                <p className="mt-8 text-center text-sm text-muted-foreground">
+                    Showing 1-3 of 3 free tools
+                </p>
+
                 {/* SEO Content Section */}
                 <section className="mt-24 border-t border-border/50 pt-16 max-w-4xl mx-auto">
                     <h2 className="text-3xl font-bold text-center mb-8">Free Online Calculators & Utilities</h2>

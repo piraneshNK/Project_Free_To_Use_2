@@ -1,6 +1,7 @@
 import FreeToolsClient from "./free-tools-client"
 import { Metadata } from "next"
 import Script from "next/script"
+import { BreadcrumbSchema, ItemListSchema } from "@/components/json-ld"
 
 export const metadata: Metadata = {
     title: "Free Online Calculators & Utilities | Project Free To Use",
@@ -13,7 +14,7 @@ export const metadata: Metadata = {
         "AI calculator",
         "free tools online",
         "calculator collection",
-        "online utilities 2026"
+        "online utilities"
     ],
     openGraph: {
         title: "Free Online Calculators & Utilities",
@@ -78,6 +79,33 @@ export default function FreeToolsPage() {
 
     return (
         <>
+            <BreadcrumbSchema
+                items={[
+                    { name: "Home", url: "https://projectfreetouse.com" },
+                    { name: "Free Tools", url: "https://projectfreetouse.com/free-tools" },
+                ]}
+            />
+            <ItemListSchema
+                name="Free Online Calculators & Utilities"
+                description="Free online calculators and utilities for everyday tasks."
+                items={[
+                    {
+                        name: "Percentage Calculator",
+                        url: "https://projectfreetouse.com/percentage-calculator",
+                        description: "Calculate percentages, differences, and changes.",
+                    },
+                    {
+                        name: "Age Calculator",
+                        url: "https://projectfreetouse.com/age-calculator",
+                        description: "Calculate your age and see the countdown to your next birthday.",
+                    },
+                    {
+                        name: "AI Overlap & Burn Calculator",
+                        url: "https://projectfreetouse.com/ai-overlap-burn-calculator",
+                        description: "Analyze AI subscription overlap and monthly costs.",
+                    },
+                ]}
+            />
             <Script
                 id="free-tools-schema"
                 type="application/ld+json"

@@ -69,6 +69,7 @@ export type DirectoryCounts = {
 
 type DirectoryData = {
   tools: Tool[]
+  directoryTools: Record<"app" | "api" | "open-source" | "patent" | "llm", Tool[]>
   counts: DirectoryCounts
 }
 
@@ -113,7 +114,7 @@ function mapRow(row: Record<string, unknown>, table: DirectoryTable): Tool | nul
   for (const tag of [valueFrom(row, "provider"), valueFrom(row, "auth"), valueFrom(row, "https"), valueFrom(row, "cors")]) {
     if (tag && !tags.includes(tag)) tags.push(tag)
   }
-  if (table === "llm_models" && !tags.some((tag) => /llm|language model|embedding|text generation/i.test(tag))) {
+  if (table === "llm_models" && !tags.some((tag) => tag.toLowerCase() === "llm")) {
     tags.push("LLM")
   }
 
@@ -200,12 +201,23 @@ async function loadDirectoryData(): Promise<DirectoryData> {
   const tables: DirectoryTable[] = ["ai_tools", "apis", "llm_models", "open_products", "software"]
   const results = await Promise.all(tables.map(async (table) => [table, await readTable(table)] as const))
   const tableData = Object.fromEntries(results) as Record<DirectoryTable, TableData>
-  const tools = tables.flatMap((table) => tableData[table].rows
+  const toolsByTable = Object.fromEntries(tables.map((table) => [table, tableData[table].rows
     .map((row) => mapRow(row, table))
-    .filter((tool): tool is Tool => tool !== null))
+    .filter((tool): tool is Tool => tool !== null)])) as Record<DirectoryTable, Tool[]>
+  const appTools = toolsByTable.ai_tools.filter((tool) =>
+    !["ai-overlap-burn-calculator", "age-calculator", "percentage-calculator"].includes(tool.id)
+  )
+  const tools = tables.flatMap((table) => toolsByTable[table])
 
   return {
     tools: [...tools, ...localTools],
+    directoryTools: {
+      app: appTools,
+      api: toolsByTable.apis,
+      "open-source": toolsByTable.software,
+      patent: toolsByTable.open_products,
+      llm: toolsByTable.llm_models,
+    },
     counts: {
       apps: tableData.ai_tools.count,
       apis: tableData.apis.count,

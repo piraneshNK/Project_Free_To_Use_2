@@ -1,74 +1,23 @@
-import { NextResponse } from 'next/server'
-import { getAllTools } from '@/lib/data'
-import { slugify } from '@/lib/transform'
+import { NextResponse } from "next/server"
+import { getSitemapEntries, renderSitemapIndex, renderUrlSet, SITEMAP_URL_LIMIT } from "@/lib/sitemap"
 
-const BASE_URL = 'https://projectfreetouse.com'
-
-export const dynamic = 'force-dynamic'
+export const dynamic = "force-dynamic"
 
 export async function GET() {
-    try {
-        const tools = await getAllTools()
-        const now = new Date().toISOString()
+  try {
+    const entries = await getSitemapEntries()
+    const xml = entries.length > SITEMAP_URL_LIMIT
+      ? renderSitemapIndex(entries.length)
+      : renderUrlSet(entries)
 
-        // Static pages
-        const staticPages = [
-            '',
-            '/ai-tools',
-            '/apis',
-            '/open-source',
-            '/open-patents',
-            '/llm-models',
-            '/ai-overlap-burn-calculator',
-            '/age-calculator',
-            '/percentage-calculator',
-            '/about',
-            '/blog',
-            '/submit',
-        ]
-
-        const staticUrls = staticPages.map(page => ({
-            url: `${BASE_URL}${page}`,
-            lastModified: now,
-            changeFrequency: 'daily',
-            priority: page === '' ? '1.0' : '0.8',
-        }))
-
-        // Dynamic tool pages
-        const toolUrls = tools.map((tool) => ({
-            url: `${BASE_URL}/tool/${tool.slug || slugify(tool.name)}`,
-            lastModified: now,
-            changeFrequency: 'weekly',
-            priority: '0.9',
-        }))
-
-        const allUrls = [...staticUrls, ...toolUrls]
-
-        // Generate XML with stylesheet reference
-        const xml = `<?xml version="1.0" encoding="UTF-8"?>
-<?xml-stylesheet type="text/xsl" href="/sitemap.xsl"?>
-<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
-  ${allUrls
-                .map(
-                    (url) => `
-  <url>
-    <loc>${url.url}</loc>
-    <lastmod>${url.lastModified}</lastmod>
-    <changefreq>${url.changeFrequency}</changefreq>
-    <priority>${url.priority}</priority>
-  </url>`
-                )
-                .join('')}
-</urlset>`
-
-        return new NextResponse(xml, {
-            headers: {
-                'Content-Type': 'application/xml',
-                'Cache-Control': 'no-store',
-            },
-        })
-    } catch (error) {
-        console.error('Error generating sitemap:', error)
-        return new NextResponse('Error generating sitemap', { status: 500 })
-    }
+    return new NextResponse(xml, {
+      headers: {
+        "Content-Type": "application/xml",
+        "Cache-Control": "no-store",
+      },
+    })
+  } catch (error) {
+    console.error("Error generating sitemap:", error)
+    return new NextResponse("Error generating sitemap", { status: 500 })
+  }
 }

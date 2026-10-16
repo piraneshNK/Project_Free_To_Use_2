@@ -40,7 +40,15 @@ export function ToolCard({ tool, index = 0 }: ToolCardProps) {
           <div className="flex items-center gap-3">
             <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-secondary text-lg font-bold text-primary">
               {tool.logoUrl && !logoFailed ? (
-                <img src={tool.logoUrl} alt={`${tool.name} logo`} className="h-8 w-8 rounded-lg object-contain" onError={() => setLogoFailed(true)} />
+                <img
+                  src={tool.logoUrl}
+                  alt={`${tool.name} logo`}
+                  width={32}
+                  height={32}
+                  loading="lazy"
+                  className="h-8 w-8 rounded-lg object-contain"
+                  onError={() => setLogoFailed(true)}
+                />
               ) : (
                 tool.name.slice(0, 2).toUpperCase()
               )}

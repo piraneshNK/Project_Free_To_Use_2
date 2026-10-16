@@ -18,7 +18,7 @@ const categoryChips = [
     { label: "APIs", href: "/apis", icon: Code },
     { label: "Open Source", href: "/open-source", icon: GitBranch },
     { label: "Patents", href: "/open-patents", icon: Lightbulb },
-    { label: "Writing AI", href: "/ai-tools?category=writing", icon: Sparkles },
+    { label: "Writing AI", href: "/ai-tools/category/writing", icon: Sparkles },
 ]
 
 const homeFaqs = [

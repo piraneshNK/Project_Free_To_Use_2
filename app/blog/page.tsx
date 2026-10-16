@@ -36,7 +36,7 @@ const blogPosts = [
   {
     id: "2",
     slug: "reliable-free-apis-developers-guide",
-    title: "The Exhausted Developer's Guide to Reliable Free APIs in 2026",
+    title: "The Exhausted Developer's Guide to Reliable Free APIs",
     excerpt:
       "Stop wasting time on dead APIs. Discover a curated list of reliable, well-documented, and free APIs for your next project, from weather data to AI endpoints.",
     category: "Development",

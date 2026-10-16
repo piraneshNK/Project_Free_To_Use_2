@@ -1,12 +1,3 @@
-"use client"
-
-import { motion } from "framer-motion"
-import {
-  Accordion,
-  AccordionContent,
-  AccordionItem,
-  AccordionTrigger,
-} from "@/components/ui/accordion"
 import { FAQSchema } from "@/components/json-ld"
 
 interface FAQ {
@@ -23,27 +14,23 @@ export function FAQSection({ title = "Frequently Asked Questions", faqs }: FAQSe
   return (
     <section className="py-12 lg:py-16">
       <FAQSchema faqs={faqs} />
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        className="mx-auto max-w-3xl"
-      >
+      <div className="mx-auto max-w-3xl">
         <h2 className="mb-8 text-center text-2xl font-bold text-foreground lg:text-3xl">
           {title}
         </h2>
-        <Accordion type="single" collapsible className="w-full">
+        <div className="w-full">
           {faqs.map((faq, index) => (
-            <AccordionItem key={index} value={`item-${index}`} className="border-border">
-              <AccordionTrigger className="text-left text-foreground hover:text-primary">
+            <details key={index} className="border-b border-border py-4">
+              <summary className="cursor-pointer text-left text-foreground hover:text-primary">
                 {faq.question}
-              </AccordionTrigger>
-              <AccordionContent className="text-muted-foreground">
+              </summary>
+              <p className="pt-3 text-muted-foreground">
                 {faq.answer}
-              </AccordionContent>
-            </AccordionItem>
+              </p>
+            </details>
           ))}
-        </Accordion>
-      </motion.div>
+        </div>
+      </div>
     </section>
   )
 }
